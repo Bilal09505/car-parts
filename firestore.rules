@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    match /products/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /suppliers/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /customers/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /purchases/{id} {
+      allow read, create: if signedIn();
+      allow update, delete: if false; // purchases are not editable after the fact
+    }
+
+    match /lots/{id} {
+      allow read, create: if signedIn();
+      // stock can never go negative or above what was purchased
+      allow update: if signedIn()
+        && request.resource.data.quantityRemaining >= 0
+        && request.resource.data.quantityRemaining <= resource.data.quantityPurchased;
+      allow delete: if false;
+    }
+
+    match /sales/{id} {
+      allow read, create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /saleItems/{id} {
+      allow read, create: if signedIn();
+      allow update, delete: if false; // immutable ledger
+    }
+  }
+}
