@@ -43,9 +43,9 @@ import { Supplier, Product, Purchase } from '../../core/models';
 
       <div class="flex items-center justify-between">
         <div class="font-semibold text-sm">Total: Rs {{ total() | number }}</div>
-        <button (click)="submit()" [disabled]="!canSubmit()"
+        <button (click)="submit()" [disabled]="!canSubmit() || isSubmitting" 
                 class="bg-orange-600 disabled:bg-gray-300 text-white text-sm px-4 py-2 rounded">
-          Save Purchase (creates lots)
+           {{ isSubmitting ?  'Saving...':'Save Purchase (creates lots)' }}
         </button>
       </div>
     </div>
@@ -74,6 +74,7 @@ export class PurchaseComponent {
   private productService = inject(ProductService);
   private purchaseService = inject(PurchaseService);
 
+  isSubmitting = false;
   suppliers = signal<Supplier[]>([]);
   products = signal<Product[]>([]);
   purchases = signal<Purchase[]>([]);
@@ -108,10 +109,16 @@ export class PurchaseComponent {
   }
 
   async submit() {
+    this.isSubmitting = true
     const supplier = this.suppliers().find((s) => s.id === this.supplierId);
     if (!supplier) return;
-    await this.purchaseService.createPurchase(supplier.id!, supplier.name, this.lines());
-    this.lines.set([{ productId: '', productName: '', quantity: 1, unitCost: 0 }]);
-    this.supplierId = '';
+    try {
+      await this.purchaseService.createPurchase(supplier.id!, supplier.name, this.lines());
+      this.lines.set([{ productId: '', productName: '', quantity: 1, unitCost: 0 }]);
+    } finally {
+      this.isSubmitting = false
+      this.supplierId = '';
+    }
+
   }
 }

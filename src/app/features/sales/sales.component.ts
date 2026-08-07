@@ -69,8 +69,8 @@ interface CartLine extends SaleLineInput {
         </div>
         <div class="flex items-center justify-between">
           <div class="font-semibold text-sm">Total: Rs {{ cartTotal() | number }}</div>
-          <button (click)="submitSale()" class="bg-orange-600 text-white text-sm px-4 py-2 rounded">
-            Complete Sale
+          <button (click)="submitSale()" class="bg-orange-600 text-white text-sm px-4 py-2 rounded" [disabled]="isSubmitting">
+            {{ isSubmitting ? "Completing" : 'Complete Sale' }}
           </button>
         </div>
       }
@@ -111,6 +111,7 @@ export class SalesComponent {
   selectedProductId = '';
   qtyInputs: Record<string, number> = {};
   priceInputs: Record<string, number> = {};
+  isSubmitting = false
 
   constructor() {
     this.productService.list().subscribe((l) => this.products.set(l));
@@ -155,6 +156,7 @@ export class SalesComponent {
   }
 
   async submitSale() {
+    this.isSubmitting = true
     const customer = this.customers().find((c) => c.id === this.customerId);
     try {
       await this.saleService.recordSale(this.customerId || null, customer?.name ?? 'Walk-in', this.cart());
@@ -163,6 +165,8 @@ export class SalesComponent {
       this.availableLots.set([]);
     } catch (err: any) {
       alert(err.message ?? 'Sale failed — stock may have changed, please retry.');
+    } finally{
+      this.isSubmitting = false
     }
   }
 }
