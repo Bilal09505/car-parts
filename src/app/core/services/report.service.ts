@@ -99,4 +99,33 @@ export class ReportService {
     });
     return result;
   }
+  async salesTrend7Days(): Promise<{ label: string; amount: number }[]> {
+    const salesCol = collection(this.firestore, 'sales');
+    const days: { label: string; amount: number }[] = [];
+
+    const starts: Date[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      starts.push(d);
+    }
+
+    const results = await Promise.all(
+      starts.map(async (start) => {
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+        const snap = await getAggregateFromServer(
+          query(salesCol, where('date', '>=', Timestamp.fromDate(start)), where('date', '<', Timestamp.fromDate(end))),
+          { totalAmount: sum('totalAmount') }
+        );
+        return {
+          label: start.toLocaleDateString('en-US', { weekday: 'short' }),
+          amount: snap.data()['totalAmount'] ?? 0,
+        };
+      })
+    );
+
+    return results;
+  }
 }

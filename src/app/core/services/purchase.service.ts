@@ -10,6 +10,9 @@ export interface PurchaseLineInput {
   productName: string;
   quantity: number;
   unitCost: number;
+  categoryFilter?: string;
+  modelFilter?: string;
+  typeFilter?: string;
 }
 
 @Injectable({ providedIn: 'root' })

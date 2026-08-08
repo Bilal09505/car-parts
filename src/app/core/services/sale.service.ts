@@ -97,4 +97,8 @@ export class SaleService {
       return saleRef.id;
     });
   }
+  listItemsForSale(saleId: string): Observable<any[]> {
+  const q = query(collection(this.firestore, 'saleItems'), where('saleId', '==', saleId));
+  return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+}
 }

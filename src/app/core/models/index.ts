@@ -4,14 +4,25 @@ export interface Category {
 }
 
 export interface Product {
-  id?: string;
+  id: string;
   name: string;
   category: string;
+  model: string;   // new
+  type: string;    // new
   vehicleModel: string;
-  unit: string;
+  unit: 'pcs' | 'set';
   reorderLevel: number;
   currentSalePrice: number;
-  createdAt?: any;
+}
+
+export interface CarModel {
+  id: string;
+  name: string;
+}
+
+export interface ProductType {
+  id: string;
+  name: string;
 }
 
 export interface Lot {
