@@ -232,10 +232,6 @@ interface CartLine extends SaleLineInput {
             <span>Total</span>
             <span>Rs {{ billSale()!.totalAmount | number }}</span>
           </div>
-          <div class="flex justify-between text-xs text-green-700 mt-1">
-            <span>Profit</span>
-            <span>Rs {{ billSale()!.totalProfit | number }}</span>
-          </div>
 
           <div class="text-center text-xs text-gray-400 mt-4">Thank you for your business</div>
 
