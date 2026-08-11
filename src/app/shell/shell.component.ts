@@ -13,7 +13,7 @@ interface NavItem { label: string; icon: string; path: string; }
       <!-- Desktop sidebar -->
       <aside class="hidden md:flex md:flex-col w-60 bg-slate-900 text-white shrink-0">
         <div class="px-5 py-5 font-bold text-lg border-b border-slate-700">
-          Car Parts Inventory
+          Mughal Auto
         </div>
         <nav class="flex-1 py-3">
           @for (item of navItems; track item.path) {
