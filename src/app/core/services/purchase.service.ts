@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore, collection, collectionData, doc, writeBatch, Timestamp, query, orderBy,
+  Firestore, collection, collectionData, doc, writeBatch, Timestamp, query, orderBy, where,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Purchase } from '../models';
@@ -21,6 +21,20 @@ export class PurchaseService {
 
   list(): Observable<Purchase[]> {
     const q = query(collection(this.firestore, 'purchases'), orderBy('date', 'desc'));
+    return collectionData(q, { idField: 'id' }) as Observable<Purchase[]>;
+  }
+
+  /**
+   * Purchases for a single supplier, newest first. Requires a Firestore
+   * composite index on (supplierId asc, date desc) — Firestore will log a
+   * console error with a one-click link to create it the first time this runs.
+   */
+  purchasesForSupplier(supplierId: string): Observable<Purchase[]> {
+    const q = query(
+      collection(this.firestore, 'purchases'),
+      where('supplierId', '==', supplierId),
+      orderBy('date', 'desc'),
+    );
     return collectionData(q, { idField: 'id' }) as Observable<Purchase[]>;
   }
 

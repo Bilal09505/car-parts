@@ -10,6 +10,7 @@ import { LotService } from '../../core/services/lot.service';
 import { SaleService, SaleLineInput } from '../../core/services/sale.service';
 import { Product, Customer, Lot, Sale, Category, CarModel, ProductType } from '../../core/models';
 import { SHOP_INFO } from '../../core/shop-info';
+import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
 
 interface CartLine extends SaleLineInput {
   lotLabel: string;
@@ -19,7 +20,7 @@ interface CartLine extends SaleLineInput {
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,SearchableSelectComponent],
   template: `
     <h1 class="text-xl font-bold text-slate-800 mb-4">Sales</h1>
 
@@ -33,7 +34,7 @@ interface CartLine extends SaleLineInput {
       </select>
 
       <label class="block text-xs text-gray-500 mb-1">1. Filter and pick a product</label>
-      <div class="grid grid-cols-3 gap-2 w-full md:w-80 mb-2">
+      <div class="grid grid-cols-3 gap-2 w-full mb-2">
         <select [(ngModel)]="categoryFilter" class="border rounded px-2 py-2 text-xs">
           <option value="">All categories</option>
           @for (c of categories(); track c.id) {
@@ -54,16 +55,13 @@ interface CartLine extends SaleLineInput {
         </select>
       </div>
 
-      <select
-        [(ngModel)]="selectedProductId"
-        (ngModelChange)="onProductPick($event)"
-        class="border rounded px-3 py-2 text-sm w-full md:w-80 mb-4"
-      >
-        <option value="" disabled selected>Select product…</option>
-        @for (p of filteredProducts(); track p.id) {
-          <option [value]="p.id">{{ p.name }}</option>
-        }
-      </select>
+
+      <app-searchable-select
+                class="rounded py-2 text-sm col-span-2 md:col-span-1"
+                [options]="filteredProducts()"
+                placeholder="Select Product"
+                [(ngModel)]="selectedProductId"
+              ></app-searchable-select>
 
       @if (availableLots().length > 0) {
         <label class="block text-xs text-gray-500 mb-1"

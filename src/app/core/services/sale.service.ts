@@ -98,7 +98,17 @@ export class SaleService {
     });
   }
   listItemsForSale(saleId: string): Observable<any[]> {
-  const q = query(collection(this.firestore, 'saleItems'), where('saleId', '==', saleId));
-  return collectionData(q, { idField: 'id' }) as Observable<any[]>;
-}
+    const q = query(collection(this.firestore, 'saleItems'), where('saleId', '==', saleId));
+    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+  }
+  
+  salesForCustomer(customerId: string): Observable<Sale[]> {
+    const q = query(
+      collection(this.firestore, 'sales'),
+      where('customerId', '==', customerId),
+      orderBy('date', 'desc'),
+    );
+    return collectionData(q, { idField: 'id' }) as Observable<Sale[]>;
+  }
+
 }

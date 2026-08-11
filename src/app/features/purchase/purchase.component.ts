@@ -9,22 +9,23 @@ import { TypeService } from '../../core/services/type.service';
 import { PurchaseService, PurchaseLineInput } from '../../core/services/purchase.service';
 import { Supplier, Product, Purchase, Category, CarModel, ProductType } from '../../core/models';
 import { SHOP_INFO } from '../../core/shop-info';
+import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
 
 @Component({
   selector: 'app-purchase',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   template: `
     <h1 class="text-xl font-bold text-slate-800 mb-4">Purchase</h1>
 
     <div class="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
       <label class="block text-xs text-gray-500 mb-1">Supplier</label>
-      <select [(ngModel)]="supplierId" class="border rounded px-3 py-2 text-sm w-full md:w-80 mb-4">
-        <option value="" disabled selected>Select supplier…</option>
-        @for (s of suppliers(); track s.id) {
-          <option [value]="s.id">{{ s.name }}</option>
-        }
-      </select>
+      <app-searchable-select
+        class="block w-full md:w-80 mb-4"
+        [options]="suppliers()"
+        placeholder="Select supplier…"
+        [(ngModel)]="supplierId"
+      ></app-searchable-select>
 
       <div class="space-y-3 mb-3">
         @for (line of lines(); track $index) {
@@ -51,16 +52,12 @@ import { SHOP_INFO } from '../../core/shop-info';
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
-              <select
+              <app-searchable-select
+                class="rounded py-2 text-sm col-span-2 md:col-span-1"
+                [options]="filteredProducts(line)"
+                placeholder="Select Product"
                 [(ngModel)]="line.productId"
-                (ngModelChange)="onProductPick(line, $event)"
-                class="border rounded px-2 py-2 text-sm col-span-2 md:col-span-1"
-              >
-                <option value="" disabled selected>Product…</option>
-                @for (p of filteredProducts(line); track p.id) {
-                  <option [value]="p.id">{{ p.name }}</option>
-                }
-              </select>
+              ></app-searchable-select>
               <input
                 [(ngModel)]="line.quantity"
                 type="number"
