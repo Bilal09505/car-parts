@@ -26,4 +26,8 @@ export class LotService {
     );
     return collectionData(q, { idField: 'id' }) as Observable<Lot[]>;
   }
+  listAllAvailable(): Observable<Lot[]> {
+  const q = query(collection(this.firestore, 'lots'), where('quantityRemaining', '>', 0));
+  return collectionData(q, { idField: 'id' }) as Observable<Lot[]>;
+}
 }

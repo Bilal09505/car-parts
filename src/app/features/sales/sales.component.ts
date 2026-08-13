@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
@@ -20,7 +20,7 @@ interface CartLine extends SaleLineInput {
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule,SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   template: `
     <h1 class="text-xl font-bold text-slate-800 mb-4">Sales</h1>
 
@@ -33,7 +33,7 @@ interface CartLine extends SaleLineInput {
         }
       </select>
 
-      <label class="block text-xs text-gray-500 mb-1">1. Filter and pick a product</label>
+      <label class="block text-xs text-gray-500 mb-1">1. Filter</label>
       <div class="grid grid-cols-3 gap-2 w-full mb-2">
         <select [(ngModel)]="categoryFilter" class="border rounded px-2 py-2 text-xs">
           <option value="">All categories</option>
@@ -55,49 +55,41 @@ interface CartLine extends SaleLineInput {
         </select>
       </div>
 
-
+      <label class="block text-xs text-gray-500 mb-1"
+        >2. Pick a lot — product, lot date, and remaining qty shown</label
+      >
       <app-searchable-select
-                class="rounded py-2 text-sm col-span-2 md:col-span-1"
-                [options]="filteredProducts()"
-                placeholder="Select Product"
-                [(ngModel)]="selectedProductId"
-              ></app-searchable-select>
+        class="rounded py-2 text-sm w-full mb-3"
+        [options]="lotOptions()"
+        placeholder="Select product lot"
+        [(ngModel)]="selectedLotId"
+      ></app-searchable-select>
 
-      @if (availableLots().length > 0) {
-        <label class="block text-xs text-gray-500 mb-1"
-          >2. Pick a lot — remaining qty and cost shown so you choose deliberately</label
-        >
-        <div class="space-y-2 mb-4">
-          @for (lot of availableLots(); track lot.id) {
-            <div
-              class="flex flex-wrap items-center gap-2 border border-gray-200 rounded p-2 bg-white text-sm"
-            >
-              <span class="font-medium">Lot {{ lot.id?.slice(0, 6) }}</span>
-              <span class="text-gray-500">Remaining: {{ lot.quantityRemaining }}</span>
-              <span class="text-gray-500">Cost: Rs {{ lot.purchasePrice | number }}</span>
-              <input
-                type="number"
-                placeholder="Qty"
-                [(ngModel)]="qtyInputs[lot.id!]"
-                class="border rounded px-2 py-1 w-20"
-              />
-              <input
-                type="number"
-                placeholder="Sale price"
-                [(ngModel)]="priceInputs[lot.id!]"
-                class="border rounded px-2 py-1 w-28"
-              />
-              <button
-                (click)="addToCart(lot)"
-                class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded"
-              >
-                Add to Sale
-              </button>
-            </div>
-          }
+      @if (selectedLot(); as lot) {
+        <div class="flex flex-wrap items-center gap-2 border border-gray-200 rounded p-2 bg-white text-sm mb-4">
+          <span class="text-gray-500">Remaining: {{ lot.quantityRemaining }}</span>
+          <span class="text-gray-500">Cost: Rs {{ lot.purchasePrice | number }}</span>
+          <input
+            type="number"
+            placeholder="Qty"
+            [(ngModel)]="qty"
+            class="border rounded px-2 py-1 w-20"
+          />
+          <input
+            type="number"
+            placeholder="Sale price"
+            [(ngModel)]="price"
+            class="border rounded px-2 py-1 w-28"
+          />
+          <button
+            (click)="addToCart(lot)"
+            class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded"
+          >
+            Add to Sale
+          </button>
         </div>
-      } @else if (selectedProductId) {
-        <p class="text-sm text-red-600 mb-4">No stock left for this product in any lot.</p>
+      } @else if (selectedLotId) {
+        <p class="text-sm text-red-600 mb-4">Selected lot is no longer available.</p>
       }
 
       @if (cart().length > 0) {
@@ -260,7 +252,7 @@ export class SalesComponent {
   models = signal<CarModel[]>([]);
   types = signal<ProductType[]>([]);
   sales = signal<Sale[]>([]);
-  availableLots = signal<Lot[]>([]);
+  allLots = signal<Lot[]>([]);
   cart = signal<CartLine[]>([]);
 
   billSale = signal<Sale | null>(null);
@@ -271,9 +263,9 @@ export class SalesComponent {
   categoryFilter = '';
   modelFilter = '';
   typeFilter = '';
-  selectedProductId = '';
-  qtyInputs: Record<string, number> = {};
-  priceInputs: Record<string, number> = {};
+  selectedLotId = '';
+  qty = 0;
+  price = 0;
   isSubmitting = false;
 
   constructor() {
@@ -283,31 +275,44 @@ export class SalesComponent {
     this.modelService.list().subscribe((l) => this.models.set(l));
     this.typeService.list().subscribe((l) => this.types.set(l));
     this.saleService.list().subscribe((l) => this.sales.set(l));
+    this.lotService.listAllAvailable().subscribe((l) => this.allLots.set(l));
   }
 
-  filteredProducts() {
-    return this.products().filter(
-      (p) =>
-        (!this.categoryFilter || p.category === this.categoryFilter) &&
-        (!this.modelFilter || p.model === this.modelFilter) &&
-        (!this.typeFilter || p.type === this.typeFilter),
+  private filteredProductIds(): Set<string> {
+    return new Set(
+      this.products()
+        .filter(
+          (p) =>
+            (!this.categoryFilter || p.category === this.categoryFilter) &&
+            (!this.modelFilter || p.model === this.modelFilter) &&
+            (!this.typeFilter || p.type === this.typeFilter),
+        )
+        .map((p) => p.id!),
     );
   }
 
-  onProductPick(productId: string) {
-    this.lotService
-      .listAvailableForProduct(productId)
-      .subscribe((lots) => this.availableLots.set(lots));
-  }
+  lotOptions = computed(() => {
+    const allowedIds = this.filteredProductIds();
+    return this.allLots()
+      .filter((lot) => allowedIds.has(lot.productId))
+      .map((lot) => {
+        const raw: any = (lot as any).purchaseDate;
+        const dateStr = raw?.toDate ? raw.toDate().toLocaleDateString() : (raw ?? '');
+        return {
+          id: lot.id!,
+          name: `${lot.productName} — ${dateStr} — Qty: ${lot.quantityRemaining}`,
+        };
+      });
+  });
+
+  selectedLot = computed(() => this.allLots().find((l) => l.id === this.selectedLotId));
 
   addToCart(lot: Lot) {
-    const qty = this.qtyInputs[lot.id!];
-    const price = this.priceInputs[lot.id!];
-    if (!qty || qty <= 0 || qty > lot.quantityRemaining) {
+    if (!this.qty || this.qty <= 0 || this.qty > lot.quantityRemaining) {
       alert(`Enter a valid quantity (max ${lot.quantityRemaining})`);
       return;
     }
-    if (!price || price <= 0) {
+    if (!this.price || this.price <= 0) {
       alert('Enter a sale price');
       return;
     }
@@ -317,14 +322,15 @@ export class SalesComponent {
         lotId: lot.id!,
         productId: lot.productId,
         productName: lot.productName,
-        quantity: qty,
-        salePrice: price,
+        quantity: this.qty,
+        salePrice: this.price,
         lotLabel: `Lot ${lot.id!.slice(0, 6)}`,
         maxQty: lot.quantityRemaining,
       },
     ]);
-    this.qtyInputs[lot.id!] = 0;
-    this.priceInputs[lot.id!] = 0;
+    this.selectedLotId = '';
+    this.qty = 0;
+    this.price = 0;
   }
 
   removeFromCart(i: number) {
@@ -360,8 +366,7 @@ export class SalesComponent {
         this.cart(),
       );
       this.cart.set([]);
-      this.selectedProductId = '';
-      this.availableLots.set([]);
+      this.selectedLotId = '';
       this.categoryFilter = '';
       this.modelFilter = '';
       this.typeFilter = '';

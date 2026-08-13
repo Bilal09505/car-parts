@@ -10,6 +10,7 @@ import { CategoryModalComponent } from './category-modal.component';
 import { ModelModalComponent } from './model-modal.component';
 import { TypeModalComponent } from './type-modal.component';
 import { PaginationComponent } from '../../core/shared/pagination';
+import { SearchInputComponent } from '../../core/shared/search-input.component';
 
 @Component({
   selector: 'app-products',
@@ -21,6 +22,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
     ModelModalComponent,
     TypeModalComponent,
     PaginationComponent,
+    SearchInputComponent,
   ],
   template: `
     <div class="flex items-center justify-between mb-4">
@@ -47,6 +49,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
           <select
             [(ngModel)]="form.category"
             name="category"
+            required
             class="border rounded px-3 py-2 text-sm flex-1"
           >
             <option value="" disabled selected>Select category…</option>
@@ -68,6 +71,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
           <select
             [(ngModel)]="form.model"
             name="model"
+            required
             class="border rounded px-3 py-2 text-sm flex-1"
           >
             <option value="" disabled selected>Select model…</option>
@@ -89,6 +93,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
           <select
             [(ngModel)]="form.type"
             name="type"
+            required
             class="border rounded px-3 py-2 text-sm flex-1"
           >
             <option value="" disabled selected>Select type…</option>
@@ -110,10 +115,16 @@ import { PaginationComponent } from '../../core/shared/pagination';
           [(ngModel)]="form.vehicleModel"
           name="vehicleModel"
           placeholder="Vehicle (e.g. Toyota Corolla)"
+          required
           class="border rounded px-3 py-2 text-sm"
         />
 
-        <select [(ngModel)]="form.unit" name="unit" class="border rounded px-3 py-2 text-sm">
+        <select
+          [(ngModel)]="form.unit"
+          name="unit"
+          required
+          class="border rounded px-3 py-2 text-sm"
+        >
           <option value="pcs">Pcs</option>
           <option value="set">Set</option>
         </select>
@@ -123,6 +134,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
           name="reorderLevel"
           type="number"
           placeholder="Reorder level"
+          required
           class="border rounded px-3 py-2 text-sm"
         />
         <input
@@ -130,6 +142,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
           name="currentSalePrice"
           type="number"
           placeholder="Default sale price"
+          required
           class="border rounded px-3 py-2 text-sm"
         />
         <button
@@ -141,6 +154,14 @@ import { PaginationComponent } from '../../core/shared/pagination';
         </button>
       </form>
     }
+
+    <div class="mb-3">
+      <app-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearchChange($event)"
+        placeholder="Search by name, vehicle, category, model, type..."
+      />
+    </div>
 
     <div class="overflow-x-auto border border-gray-200 rounded">
       <table class="w-full text-sm">
@@ -186,7 +207,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
           } @empty {
             <tr>
               <td colspan="9" class="px-3 py-4 text-center text-gray-400 text-xs">
-                No products yet.
+                {{ searchTerm() ? 'No products match your search.' : 'No products yet.' }}
               </td>
             </tr>
           }
@@ -194,7 +215,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
       </table>
     </div>
     <app-pagination
-      [totalItems]="products().length"
+      [totalItems]="filteredProducts().length"
       [pageSize]="pageSize"
       [currentPage]="currentPage()"
       (currentPageChange)="currentPage.set($event)"
@@ -260,6 +281,7 @@ export class ProductsComponent {
   showTypeModal = signal(false);
   editingId = signal<string | null>(null);
   deleteTarget = signal<Product | null>(null);
+  searchTerm = signal('');
 
   private emptyForm(): Partial<Product> {
     return {
@@ -282,6 +304,22 @@ export class ProductsComponent {
     this.modelService.list().subscribe((list) => this.models.set(list));
     this.typeService.list().subscribe((list) => this.types.set(list));
   }
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+
+  filteredProducts = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.products();
+
+    return this.products().filter((p) =>
+      [p.name, p.vehicleModel, p.category, p.model, p.type].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
 
   openAddForm() {
     if (this.showForm() && !this.editingId()) {
@@ -348,10 +386,11 @@ export class ProductsComponent {
       this.isSubmitting = false;
     }
   }
+
   currentPage = signal(1);
   pageSize = 10;
   paginatedProducts = computed(() => {
-    const products = this.products();
+    const products = this.filteredProducts();
     const start = (this.currentPage() - 1) * this.pageSize;
     const end = start + this.pageSize;
 
