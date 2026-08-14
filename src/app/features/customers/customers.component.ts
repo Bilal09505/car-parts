@@ -76,7 +76,6 @@ import { Customer, Sale } from '../../core/models';
               <td class="px-3 py-2">{{ c.name }}</td>
               <td class="px-3 py-2">{{ c.phone }}</td>
               <td class="px-3 py-2">{{ c.address }}</td>
-              <td class="px-3 py-2 text-right">Rs {{ c.balance || 0 | number }}</td>
               <td class="px-3 py-2 text-right space-x-2 whitespace-nowrap">
                 <button
                   (click)="openEditForm(c)"
@@ -121,9 +120,7 @@ import { Customer, Sale } from '../../core/models';
             <div><span class="text-gray-500">Name:</span> {{ vc.name }}</div>
             <div><span class="text-gray-500">Phone:</span> {{ vc.phone || '—' }}</div>
             <div><span class="text-gray-500">Address:</span> {{ vc.address || '—' }}</div>
-            <div>
-              <span class="text-gray-500">Balance Owed:</span> Rs {{ vc.balance || 0 | number }}
-            </div>
+            
           </div>
 
           <h3 class="text-xs font-semibold text-gray-500 mb-2">Sales History</h3>
