@@ -369,7 +369,18 @@ export class ProductsComponent {
   }
 
   async save() {
-    if (!this.form.name) return;
+    if (
+    !this.form.name?.trim() ||
+    !this.form.category ||
+    !this.form.model ||
+    !this.form.type ||
+    !this.form.vehicleModel?.trim() ||
+    !this.form.unit ||
+    this.form.reorderLevel == null ||
+    this.form.currentSalePrice == null
+  ) {
+    return;
+  }
 
     this.isSubmitting = true;
     try {

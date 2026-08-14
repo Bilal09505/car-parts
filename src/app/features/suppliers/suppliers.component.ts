@@ -38,7 +38,6 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
             <th class="px-3 py-2 text-left">Name</th>
             <th class="px-3 py-2 text-left">Phone</th>
             <th class="px-3 py-2 text-left">Address</th>
-            <th class="px-3 py-2 text-right">Balance We Owe</th>
             <th class="px-3 py-2 text-right">Action</th>
           </tr>
         </thead>
@@ -47,8 +46,7 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
             <tr class="border-t border-gray-200">
               <td class="px-3 py-2">{{ s.name }}</td>
               <td class="px-3 py-2">{{ s.phone }}</td>
-              <td class="px-3 py-2">{{ s.address }}</td>
-              <td class="px-3 py-2 text-right">Rs {{ (s.balance || 0) | number }}</td>
+              <td class="px-3 py-2">{{ s.address }}</td>              
               <td class="px-3 py-2 text-right space-x-2 whitespace-nowrap">
                 <button (click)="openEditForm(s)" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded">
                   Edit
