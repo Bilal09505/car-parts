@@ -56,7 +56,8 @@ import { SearchableSelectComponent } from '../../core/shared/searchable-select.c
                 class="rounded py-2 text-sm col-span-2 md:col-span-1"
                 [options]="filteredProducts(line)"
                 placeholder="Select Product"
-                [(ngModel)]="line.productId"
+                [ngModel]="line.productId"
+                (ngModelChange)="onProductPick(line, $event)"
               ></app-searchable-select>
               <input
                 [(ngModel)]="line.quantity"
@@ -251,6 +252,7 @@ export class PurchaseComponent {
   }
 
   onProductPick(line: PurchaseLineInput, productId: string) {
+    line.productId = productId;
     const p = this.products().find((x) => x.id === productId);
     line.productName = p?.name ?? '';
   }

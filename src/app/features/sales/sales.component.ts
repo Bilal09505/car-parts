@@ -305,7 +305,9 @@ export class SalesComponent {
       });
   });
 
-  selectedLot = computed(() => this.allLots().find((l) => l.id === this.selectedLotId));
+  selectedLot(): Lot | undefined {
+  return this.allLots().find((l) => l.id === this.selectedLotId);
+}
 
   addToCart(lot: Lot) {
     if (!this.qty || this.qty <= 0 || this.qty > lot.quantityRemaining) {

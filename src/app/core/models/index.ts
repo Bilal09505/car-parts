@@ -89,3 +89,12 @@ export interface Customer {
   address: string;
   balance: number; // positive = they owe us
 }
+
+export interface SupplierPayment {
+  id?: string;
+  supplierId: string;
+  amount: number;
+  source: string;   // bank name / cash / etc.
+  detail?: string;
+  date?: any;        // Firestore Timestamp
+}

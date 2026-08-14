@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { SupplierService } from '../../core/services/supplier.service';
 import { PurchaseService } from '../../core/services/purchase.service';
-import { Supplier, Purchase } from '../../core/models';
+import { SupplierPaymentService } from '../../core/services/supplier-payment.service';
+import { Supplier, Purchase, SupplierPayment } from '../../core/models';
 
 @Component({
   selector: 'app-suppliers',
@@ -55,6 +56,9 @@ import { Supplier, Purchase } from '../../core/models';
                 <button (click)="openView(s)" class="bg-slate-700 text-white text-xs px-3 py-1.5 rounded">
                   View
                 </button>
+                <button (click)="openPayModal(s)" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded">
+                  Pay
+                </button>
               </td>
             </tr>
           } @empty {
@@ -68,7 +72,7 @@ import { Supplier, Purchase } from '../../core/models';
 
     @if (viewSupplier(); as vs) {
       <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" (click)="closeView()">
-        <div class="bg-white rounded shadow-lg w-full max-w-sm p-5" (click)="$event.stopPropagation()">
+        <div class="bg-white rounded shadow-lg w-full max-w-2xl p-5" (click)="$event.stopPropagation()">
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-bold text-slate-800 text-sm">Supplier Details</h2>
             <button (click)="closeView()" class="text-gray-500 text-lg leading-none">✕</button>
@@ -82,7 +86,7 @@ import { Supplier, Purchase } from '../../core/models';
           </div>
 
           <h3 class="text-xs font-semibold text-gray-500 mb-2">Purchase History</h3>
-          <div class="max-h-56 overflow-auto border border-gray-200 rounded mb-4">
+          <div class="max-h-40 overflow-auto border border-gray-200 rounded mb-4">
             <table class="w-full text-xs">
               <thead class="bg-gray-100 sticky top-0">
                 <tr>
@@ -113,9 +117,63 @@ import { Supplier, Purchase } from '../../core/models';
             </table>
           </div>
 
+          <h3 class="text-xs font-semibold text-gray-500 mb-2">Payment History</h3>
+          <div class="max-h-40 overflow-auto border border-gray-200 rounded mb-4">
+            <table class="w-full text-xs">
+              <thead class="bg-gray-100 sticky top-0">
+                <tr>
+                  <th class="px-2 py-1.5 text-left">Date</th>
+                  <th class="px-2 py-1.5 text-left">Source</th>
+                  <th class="px-2 py-1.5 text-left">Detail</th>
+                  <th class="px-2 py-1.5 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of supplierPayments(); track p.id) {
+                  <tr class="border-t border-gray-100">
+                    <td class="px-2 py-1.5">
+                      {{
+                        p.date?.toDate
+                          ? (p.date.toDate() | date: 'd MMM y, h:mm a')
+                          : (p.date | date: 'd MMM y, h:mm a')
+                      }}
+                    </td>
+                    <td class="px-2 py-1.5">{{ p.source }}</td>
+                    <td class="px-2 py-1.5">{{ p.detail || '—' }}</td>
+                    <td class="px-2 py-1.5 text-right">Rs {{ p.amount | number }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="px-2 py-3 text-center text-gray-400">No payments yet.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
           <button (click)="closeView()" class="bg-slate-800 text-white text-sm px-3 py-2 rounded w-full">
             Close
           </button>
+        </div>
+      </div>
+    }
+
+    @if (payingSupplier(); as ps) {
+      <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" (click)="closePayModal()">
+        <div class="bg-white rounded shadow-lg w-full max-w-sm p-5" (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-bold text-slate-800 text-sm">Pay {{ ps.name }}</h2>
+            <button (click)="closePayModal()" class="text-gray-500 text-lg leading-none">✕</button>
+          </div>
+
+          <form (ngSubmit)="savePayment()" class="space-y-3">
+            <input [(ngModel)]="paymentForm.amount" name="amount" type="number" placeholder="Amount" required class="border rounded px-3 py-2 text-sm w-full" />
+            <input [(ngModel)]="paymentForm.source" name="source" placeholder="Source / Bank name" required class="border rounded px-3 py-2 text-sm w-full" />
+            <input [(ngModel)]="paymentForm.detail" name="detail" placeholder="Detail (optional)" class="border rounded px-3 py-2 text-sm w-full" />
+            <button type="submit" class="bg-green-600 text-white text-sm px-3 py-2 rounded w-full">
+              Save Payment
+            </button>
+          </form>
         </div>
       </div>
     }
@@ -124,14 +182,21 @@ import { Supplier, Purchase } from '../../core/models';
 export class SuppliersComponent {
   private supplierService = inject(SupplierService);
   private purchaseService = inject(PurchaseService);
+  private paymentService = inject(SupplierPaymentService);
+
   suppliers = signal<Supplier[]>([]);
   showForm = signal(false);
   editingId = signal<string | null>(null);
   viewSupplier = signal<Supplier | null>(null);
   supplierPurchases = signal<Purchase[]>([]);
+  supplierPayments = signal<SupplierPayment[]>([]);
+  payingSupplier = signal<Supplier | null>(null);
+
   private purchasesSub?: Subscription;
+  private paymentsSub?: Subscription;
 
   form: Partial<Supplier> = { name: '', phone: '', address: '', balance: 0 };
+  paymentForm: Partial<SupplierPayment> = { amount: 0, source: '', detail: '' };
 
   constructor() {
     this.supplierService.list().subscribe((list) => this.suppliers.set(list));
@@ -156,36 +221,72 @@ export class SuppliersComponent {
   openView(s: Supplier) {
     this.viewSupplier.set(s);
     this.purchasesSub?.unsubscribe();
+    this.paymentsSub?.unsubscribe();
     if (s.id) {
       this.purchasesSub = this.purchaseService
         .purchasesForSupplier(s.id)
         .subscribe((purchases) => this.supplierPurchases.set(purchases));
+      this.paymentsSub = this.paymentService
+        .paymentsForSupplier(s.id)
+        .subscribe((payments) => this.supplierPayments.set(payments));
     }
   }
 
-  // Opening balance + everything purchased since. Assumes `balance` is only
-  // ever set once at creation and never mutated by purchases elsewhere in
-  // the app — if something else also writes to balance on purchase, this
-  // will double-count. Confirm that assumption before relying on this number.
+  // Net owed = opening balance + total purchased - total paid.
+  // Assumes `balance` is a static opening figure set once at creation and
+  // never mutated elsewhere. If something else writes to balance on
+  // purchase/payment, this will double-count — verify before trusting it.
   totalOwed(s: Supplier): number {
     const purchaseTotal = this.supplierPurchases().reduce(
       (sum, p) => sum + (p.totalCost || 0),
       0,
     );
-    return (s.balance || 0) + purchaseTotal;
+    const paidTotal = this.supplierPayments().reduce(
+      (sum, p) => sum + (p.amount || 0),
+      0,
+    );
+    return (s.balance || 0) + purchaseTotal - paidTotal;
   }
 
   closeView() {
     this.viewSupplier.set(null);
     this.purchasesSub?.unsubscribe();
+    this.paymentsSub?.unsubscribe();
     this.supplierPurchases.set([]);
+    this.supplierPayments.set([]);
+  }
+
+  openPayModal(s: Supplier) {
+    this.paymentForm = { amount: 0, source: '', detail: '' };
+    this.payingSupplier.set(s);
+  }
+
+  closePayModal() {
+    this.payingSupplier.set(null);
+  }
+
+  async savePayment() {
+    const supplier = this.payingSupplier();
+    if (!supplier?.id || !this.paymentForm.amount || !this.paymentForm.source) return;
+
+    await this.paymentService.add({
+      supplierId: supplier.id,
+      amount: Number(this.paymentForm.amount) || 0,
+      source: this.paymentForm.source,
+      detail: this.paymentForm.detail || '',
+    });
+
+    // Refresh history if the view modal for this supplier happens to be open.
+    if (this.viewSupplier()?.id === supplier.id) {
+      this.openView(supplier);
+    }
+
+    this.closePayModal();
   }
 
   async save() {
     if (!this.form.name) return;
 
-    // ngModel on a number input can yield null/undefined if the field is
-    // cleared, so coerce explicitly rather than trusting the form's type.
     const payload: Partial<Supplier> = {
       ...this.form,
       balance: Number(this.form.balance) || 0,
@@ -193,8 +294,6 @@ export class SuppliersComponent {
 
     const id = this.editingId();
     if (id) {
-      // Assumes SupplierService has update(id, data). Adjust if your
-      // service method name/signature differs.
       await this.supplierService.update(id, payload);
     } else {
       await this.supplierService.add(payload as Omit<Supplier, 'id'>);
