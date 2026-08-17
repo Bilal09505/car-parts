@@ -19,6 +19,7 @@ export const routes: Routes = [
       { path: 'sales', loadComponent: () => import('./features/sales/sales.component').then(m => m.SalesComponent) },
       { path: 'lots', loadComponent: () => import('./features/lots/lots.component').then(m => m.LotsComponent) },
       { path: 'suppliers', loadComponent: () => import('./features/suppliers/suppliers.component').then(m => m.SuppliersComponent) },
+      { path: 'suppliers/:id', loadComponent: () => import('./features/suppliers/supplier-detail.component').then(m => m.SupplierDetailComponent) },
       { path: 'customers', loadComponent: () => import('./features/customers/customers.component').then(m => m.CustomersComponent) },
       { path: 'reports', loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent) },
     ],

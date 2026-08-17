@@ -6,11 +6,12 @@ import { SupplierService } from '../../core/services/supplier.service';
 import { PurchaseService } from '../../core/services/purchase.service';
 import { SupplierPaymentService } from '../../core/services/supplier-payment.service';
 import { Supplier, Purchase, SupplierPayment } from '../../core/models';
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'app-suppliers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-xl font-bold text-slate-800">Suppliers</h1>
@@ -51,11 +52,8 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
                 <button (click)="openEditForm(s)" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded">
                   Edit
                 </button>
-                <button (click)="openView(s)" class="bg-slate-700 text-white text-xs px-3 py-1.5 rounded">
+                <button [routerLink]="['/suppliers', s.id]" class="bg-slate-700 text-white text-xs px-3 py-1.5 rounded">
                   View
-                </button>
-                <button (click)="openPayModal(s)" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded">
-                  Pay
                 </button>
               </td>
             </tr>

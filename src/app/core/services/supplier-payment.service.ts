@@ -1,5 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, addDoc, query, where, orderBy, Timestamp } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  collectionData,
+  addDoc,
+  updateDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { SupplierPayment } from '../models';
 
@@ -15,5 +26,10 @@ export class SupplierPaymentService {
 
   add(payment: Omit<SupplierPayment, 'id'>) {
     return addDoc(this.col, { ...payment, date: Timestamp.now() });
+  }
+
+  update(id: string, payment: Partial<Omit<SupplierPayment, 'id' | 'supplierId'>>) {
+    const ref = doc(this.firestore, 'supplierPayments', id);
+    return updateDoc(ref, { ...payment });
   }
 }
