@@ -14,6 +14,7 @@ import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/f
 export interface SelectableOption {
   id?: string;
   name: string;
+  vehicleModel?:string
 }
 
 @Component({
@@ -49,7 +50,7 @@ export interface SelectableOption {
               [class.bg-gray-100]="o.id === value()"
               (click)="pick(o)"
             >
-              {{ o.name }}
+             {{ o.name }}{{ o.vehicleModel ? ' - ' + o.vehicleModel : '' }}
             </li>
           } @empty {
             <li class="px-3 py-2 text-gray-400">No matches</li>
