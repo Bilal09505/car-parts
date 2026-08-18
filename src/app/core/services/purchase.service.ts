@@ -13,6 +13,7 @@ export interface PurchaseLineInput {
   categoryFilter?: string;
   modelFilter?: string;
   typeFilter?: string;
+  vihcleFilter?:string
 }
 
 @Injectable({ providedIn: 'root' })

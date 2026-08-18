@@ -275,7 +275,14 @@ export class SalesComponent {
     this.modelService.list().subscribe((l) => this.models.set(l));
     this.typeService.list().subscribe((l) => this.types.set(l));
     this.saleService.list().subscribe((l) => this.sales.set(l));
-    this.lotService.listAllAvailable().subscribe((l) => this.allLots.set(l));
+    this.lotService.listAllAvailable().subscribe((l) => {
+      this.allLots.set(l)
+      console.log(l);
+    
+    }
+      
+    );
+    
   }
 
   private filteredProductIds(): Set<string> {

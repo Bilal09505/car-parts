@@ -10,12 +10,17 @@ export interface Product {
   model: string;   // new
   type: string;    // new
   vehicleModel: string;
+  vehicle:string;
   unit: 'pcs' | 'set';
   reorderLevel: number;
   currentSalePrice: number;
 }
 
 export interface CarModel {
+  id: string;
+  name: string;
+}
+export interface VehicleModel {
   id: string;
   name: string;
 }

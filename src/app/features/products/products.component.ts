@@ -5,12 +5,14 @@ import { ProductService } from '../../core/services/product.service';
 import { CategoryService } from '../../core/services/category.service';
 import { ModelService } from '../../core/services/model.service';
 import { TypeService } from '../../core/services/type.service';
-import { Product, Category, CarModel, ProductType } from '../../core/models';
+import { Product, Category, CarModel, ProductType, VehicleModel } from '../../core/models';
 import { CategoryModalComponent } from './category-modal.component';
 import { ModelModalComponent } from './model-modal.component';
 import { TypeModalComponent } from './type-modal.component';
 import { PaginationComponent } from '../../core/shared/pagination';
 import { SearchInputComponent } from '../../core/shared/search-input.component';
+import { VehicleModalComponent } from './vehicle-modal.component';
+import { VehicleService } from '../../core/services/vehicle-type.service';
 
 @Component({
   selector: 'app-products',
@@ -23,6 +25,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
     TypeModalComponent,
     PaginationComponent,
     SearchInputComponent,
+    VehicleModalComponent
   ],
   template: `
     <div class="flex items-center justify-between mb-4">
@@ -108,6 +111,28 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
             title="Add / manage types"
           >
             + Type
+          </button>
+        </div>
+
+        <div class="flex gap-2">
+          <select
+            [(ngModel)]="form.vehicle"
+            name="vehicle"
+            required
+            class="border rounded px-3 py-2 text-sm flex-1"
+          >
+            <option value="" disabled selected>Select vehicle...</option>
+            @for (t of vehicles(); track t.id) {
+              <option [value]="t.name">{{ t.name }}</option>
+            }
+          </select>
+          <button
+            type="button"
+            (click)="showVehicleModal.set(true)"
+            class="bg-slate-800 text-white text-xs px-2 rounded shrink-0"
+            title="Add / manage vehicles"
+          >
+            + Vehicle
           </button>
         </div>
 
@@ -230,6 +255,9 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
     @if (showTypeModal()) {
       <app-type-modal (close)="showTypeModal.set(false)" />
     }
+    @if (showVehicleModal()) {
+      <app-vehicle-modal (close)="showVehicleModal.set(false)" />
+    }
 
     @if (deleteTarget(); as dt) {
       <div
@@ -267,11 +295,13 @@ export class ProductsComponent {
   private categoryService = inject(CategoryService);
   private modelService = inject(ModelService);
   private typeService = inject(TypeService);
+  private vehicleService = inject(VehicleService);
 
   products = signal<Product[]>([]);
   categories = signal<Category[]>([]);
   models = signal<CarModel[]>([]);
   types = signal<ProductType[]>([]);
+  vehicles = signal<VehicleModel[]>([]);
 
   isSubmitting = false;
   isDeleting = false;
@@ -279,6 +309,7 @@ export class ProductsComponent {
   showCategoryModal = signal(false);
   showModelModal = signal(false);
   showTypeModal = signal(false);
+  showVehicleModal = signal(false);
   editingId = signal<string | null>(null);
   deleteTarget = signal<Product | null>(null);
   searchTerm = signal('');
@@ -290,6 +321,7 @@ export class ProductsComponent {
       model: '',
       type: '',
       vehicleModel: '',
+      vehicle: '',
       unit: 'pcs',
       reorderLevel: 5,
       currentSalePrice: 0,
@@ -303,6 +335,7 @@ export class ProductsComponent {
     this.categoryService.list().subscribe((list) => this.categories.set(list));
     this.modelService.list().subscribe((list) => this.models.set(list));
     this.typeService.list().subscribe((list) => this.types.set(list));
+    this.vehicleService.list().subscribe((list) => this.vehicles.set(list));
   }
 
   onSearchChange(term: string) {
@@ -339,6 +372,7 @@ export class ProductsComponent {
       model: p.model,
       type: p.type,
       vehicleModel: p.vehicleModel,
+      vehicle: p.vehicle,
       unit: p.unit,
       reorderLevel: p.reorderLevel,
       currentSalePrice: p.currentSalePrice,

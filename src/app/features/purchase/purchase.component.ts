@@ -7,9 +7,10 @@ import { CategoryService } from '../../core/services/category.service';
 import { ModelService } from '../../core/services/model.service';
 import { TypeService } from '../../core/services/type.service';
 import { PurchaseService, PurchaseLineInput } from '../../core/services/purchase.service';
-import { Supplier, Product, Purchase, Category, CarModel, ProductType } from '../../core/models';
+import { Supplier, Product, Purchase, Category, CarModel, ProductType, VehicleModel } from '../../core/models';
 import { SHOP_INFO } from '../../core/shop-info';
 import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
+import { VehicleService } from '../../core/services/vehicle-type.service';
 
 @Component({
   selector: 'app-purchase',
@@ -30,7 +31,7 @@ import { SearchableSelectComponent } from '../../core/shared/searchable-select.c
       <div class="space-y-3 mb-3">
         @for (line of lines(); track $index) {
           <div class="border border-gray-200 rounded p-3 bg-white">
-            <div class="grid grid-cols-3 gap-2 mb-2">
+            <div class="grid grid-cols-4 gap-2 mb-2">
               <select [(ngModel)]="line.categoryFilter" class="border rounded px-2 py-2 text-xs">
                 <option value="">All categories</option>
                 @for (c of categories(); track c.id) {
@@ -46,6 +47,12 @@ import { SearchableSelectComponent } from '../../core/shared/searchable-select.c
               <select [(ngModel)]="line.typeFilter" class="border rounded px-2 py-2 text-xs">
                 <option value="">All types</option>
                 @for (t of types(); track t.id) {
+                  <option [value]="t.name">{{ t.name }}</option>
+                }
+              </select>
+               <select [(ngModel)]="line.vihcleFilter" class="border rounded px-2 py-2 text-xs">
+                <option value="">All Vichles</option>
+                @for (t of vihcles(); track t.id) {
                   <option [value]="t.name">{{ t.name }}</option>
                 }
               </select>
@@ -208,6 +215,7 @@ export class PurchaseComponent {
   private categoryService = inject(CategoryService);
   private modelService = inject(ModelService);
   private typeService = inject(TypeService);
+  private vichleService = inject(VehicleService);
   private purchaseService = inject(PurchaseService);
 
   isSubmitting = false;
@@ -216,6 +224,7 @@ export class PurchaseComponent {
   categories = signal<Category[]>([]);
   models = signal<CarModel[]>([]);
   types = signal<ProductType[]>([]);
+  vihcles = signal<VehicleModel[]>([]);
   purchases = signal<Purchase[]>([]);
   supplierId = '';
 
@@ -230,6 +239,7 @@ export class PurchaseComponent {
       categoryFilter: '',
       modelFilter: '',
       typeFilter: '',
+      vihcleFilter: ''
     },
   ]);
 
@@ -240,6 +250,7 @@ export class PurchaseComponent {
     this.modelService.list().subscribe((l) => this.models.set(l));
     this.typeService.list().subscribe((l) => this.types.set(l));
     this.purchaseService.list().subscribe((l) => this.purchases.set(l));
+    this.vichleService.list().subscribe((l) => this.vihcles.set(l));
   }
 
   filteredProducts(line: PurchaseLineInput) {
@@ -247,6 +258,7 @@ export class PurchaseComponent {
       (p) =>
         (!line.categoryFilter || p.category === line.categoryFilter) &&
         (!line.modelFilter || p.model === line.modelFilter) &&
+        (!line.vihcleFilter || p.vehicle === line.vihcleFilter) &&
         (!line.typeFilter || p.type === line.typeFilter),
     );
   }
@@ -268,6 +280,7 @@ export class PurchaseComponent {
         categoryFilter: '',
         modelFilter: '',
         typeFilter: '',
+        vihcleFilter: '',
       },
     ]);
   }
