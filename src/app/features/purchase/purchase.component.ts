@@ -7,7 +7,15 @@ import { CategoryService } from '../../core/services/category.service';
 import { ModelService } from '../../core/services/model.service';
 import { TypeService } from '../../core/services/type.service';
 import { PurchaseService, PurchaseLineInput } from '../../core/services/purchase.service';
-import { Supplier, Product, Purchase, Category, CarModel, ProductType, VehicleModel } from '../../core/models';
+import {
+  Supplier,
+  Product,
+  Purchase,
+  Category,
+  CarModel,
+  ProductType,
+  VehicleModel,
+} from '../../core/models';
 import { SHOP_INFO } from '../../core/shop-info';
 import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
 import { VehicleService } from '../../core/services/vehicle-type.service';
@@ -50,7 +58,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
                   <option [value]="t.name">{{ t.name }}</option>
                 }
               </select>
-               <select [(ngModel)]="line.vihcleFilter" class="border rounded px-2 py-2 text-xs">
+              <select [(ngModel)]="line.vihcleFilter" class="border rounded px-2 py-2 text-xs">
                 <option value="">All Vichles</option>
                 @for (t of vihcles(); track t.id) {
                   <option [value]="t.name">{{ t.name }}</option>
@@ -115,12 +123,24 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
               <td class="px-3 py-2">{{ p.supplierName }}</td>
               <td class="px-3 py-2">{{ p.items.length }} line(s)</td>
               <td class="px-3 py-2 text-right">Rs {{ p.totalCost | number }}</td>
-              <td class="px-3 py-2 text-right">
+              <td class="px-3 py-2 text-right space-x-1">
                 <button
                   (click)="openBill(p)"
                   class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded"
                 >
                   View Bill
+                </button>
+                <button
+                  (click)="startEdit(p)"
+                  class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded"
+                >
+                  Edit
+                </button>
+                <button
+                  (click)="deletePurchase(p)"
+                  class="bg-red-600 text-white text-xs px-3 py-1.5 rounded"
+                >
+                  Delete
                 </button>
               </td>
             </tr>
@@ -239,7 +259,7 @@ export class PurchaseComponent {
       categoryFilter: '',
       modelFilter: '',
       typeFilter: '',
-      vihcleFilter: ''
+      vihcleFilter: '',
     },
   ]);
 
@@ -309,25 +329,101 @@ export class PurchaseComponent {
     this.billPurchase.set(null);
   }
 
+  // async submit() {
+  //   const supplier = this.suppliers().find((s) => s.id === this.supplierId);
+  //   if (!supplier) return;
+
+  //   this.isSubmitting = true;
+  //   try {
+  //     await this.purchaseService.createPurchase(supplier.id!, supplier.name, this.lines());
+  //     this.lines.set([
+  //       {
+  //         productId: '',
+  //         productName: '',
+  //         quantity: 1,
+  //         unitCost: 0,
+  //         categoryFilter: '',
+  //         modelFilter: '',
+  //         typeFilter: '',
+  //       },
+  //     ]);
+  //     this.supplierId = '';
+  //   } finally {
+  //     this.isSubmitting = false;
+  //   }
+  // }
+  editingPurchaseId = signal<string | null>(null);
+
+  startEdit(p: Purchase) {
+    this.editingPurchaseId.set(p.id!);
+    this.supplierId = p.supplierId;
+    this.lines.set(
+      p.items.map((i) => ({
+        productId: i.productId,
+        productName: i.productName,
+        quantity: i.quantity,
+        unitCost: i.unitCost,
+        categoryFilter: '',
+        modelFilter: '',
+        typeFilter: '',
+        vihcleFilter: '',
+      })),
+    );
+  }
+
+  cancelEdit() {
+    this.editingPurchaseId.set(null);
+    this.resetForm();
+  }
+
+  async deletePurchase(p: Purchase) {
+    if (!confirm(`Delete purchase from ${p.supplierName}? This cannot be undone.`)) return;
+    try {
+      await this.purchaseService.deletePurchase(p.id!);
+    } catch (e: any) {
+      alert(e.message ?? 'Failed to delete purchase.');
+    }
+  }
+
+  private resetForm() {
+    this.lines.set([
+      {
+        productId: '',
+        productName: '',
+        quantity: 1,
+        unitCost: 0,
+        categoryFilter: '',
+        modelFilter: '',
+        typeFilter: '',
+        vihcleFilter: '',
+      },
+    ]);
+    this.supplierId = '';
+  }
+
   async submit() {
     const supplier = this.suppliers().find((s) => s.id === this.supplierId);
     if (!supplier) return;
 
     this.isSubmitting = true;
     try {
-      await this.purchaseService.createPurchase(supplier.id!, supplier.name, this.lines());
-      this.lines.set([
-        {
-          productId: '',
-          productName: '',
-          quantity: 1,
-          unitCost: 0,
-          categoryFilter: '',
-          modelFilter: '',
-          typeFilter: '',
-        },
-      ]);
-      this.supplierId = '';
+      const editId = this.editingPurchaseId();
+      if (editId) {
+        await this.purchaseService.updatePurchase(
+          editId,
+          supplier.id!,
+          supplier.name,
+          this.lines(),
+        );
+        this.editingPurchaseId.set(null);
+      } else {
+        await this.purchaseService.createPurchase(supplier.id!, supplier.name, this.lines());
+      }
+      this.resetForm();
+    } catch (e: any) {
+      alert(e.message ?? 'Failed to save purchase.');
+      this.resetForm();
+      this.isSubmitting = false;
     } finally {
       this.isSubmitting = false;
     }
