@@ -187,6 +187,8 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
             <thead>
               <tr class="border-b border-gray-200 text-gray-500 text-xs">
                 <th class="text-left py-1">Item</th>
+                <th class="text-left py-1">Vehicle</th>
+                <th class="text-left py-1">Vehicle Model</th>
                 <th class="text-right py-1">Qty</th>
                 <th class="text-right py-1">Cost</th>
                 <th class="text-right py-1">Subtotal</th>
@@ -196,6 +198,8 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
               @for (item of billPurchase()!.items; track $index) {
                 <tr class="border-b border-gray-100">
                   <td class="py-1">{{ item.productName }}</td>
+                  <td class="py-1">{{ item.vehicle }}</td>
+                  <td class="py-1">{{ item.vehicleModel }}</td>
                   <td class="py-1 text-right">{{ item.quantity }}</td>
                   <td class="py-1 text-right">Rs {{ item.unitCost | number }}</td>
                   <td class="py-1 text-right">Rs {{ item.quantity * item.unitCost | number }}</td>
@@ -260,6 +264,11 @@ export class PurchaseComponent {
       modelFilter: '',
       typeFilter: '',
       vihcleFilter: '',
+      category: '',
+      model: '',
+      type: '',
+      vehicleModel: '',
+      vehicle: '',
     },
   ]);
 
@@ -287,6 +296,11 @@ export class PurchaseComponent {
     line.productId = productId;
     const p = this.products().find((x) => x.id === productId);
     line.productName = p?.name ?? '';
+    line.category = p?.category ?? '';
+    line.model = p?.model ?? '';
+    line.type = p?.type ?? '';
+    line.vehicleModel = p?.vehicleModel ?? '';
+    line.vehicle = p?.vehicle ?? '';
   }
 
   addLine() {
@@ -301,6 +315,11 @@ export class PurchaseComponent {
         modelFilter: '',
         typeFilter: '',
         vihcleFilter: '',
+        category: '',
+        model: '',
+        type: '',
+        vehicleModel: '',
+        vehicle: '',
       },
     ]);
   }
@@ -329,29 +348,6 @@ export class PurchaseComponent {
     this.billPurchase.set(null);
   }
 
-  // async submit() {
-  //   const supplier = this.suppliers().find((s) => s.id === this.supplierId);
-  //   if (!supplier) return;
-
-  //   this.isSubmitting = true;
-  //   try {
-  //     await this.purchaseService.createPurchase(supplier.id!, supplier.name, this.lines());
-  //     this.lines.set([
-  //       {
-  //         productId: '',
-  //         productName: '',
-  //         quantity: 1,
-  //         unitCost: 0,
-  //         categoryFilter: '',
-  //         modelFilter: '',
-  //         typeFilter: '',
-  //       },
-  //     ]);
-  //     this.supplierId = '';
-  //   } finally {
-  //     this.isSubmitting = false;
-  //   }
-  // }
   editingPurchaseId = signal<string | null>(null);
 
   startEdit(p: Purchase) {

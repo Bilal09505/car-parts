@@ -10,6 +10,8 @@ export interface SaleLineInput {
   lotId: string;
   productId: string;
   productName: string;
+  vehicleModel?:string;
+  vehicle?:string;
   quantity: number;
   salePrice: number; // per unit
 }
@@ -73,6 +75,8 @@ export class SaleService {
           lotId: line.lotId,
           productId: line.productId,
           productName: line.productName,
+          vehicle:line.vehicle,
+          vehicleModel:line.vehicleModel,
           quantity: line.quantity,
           salePrice: line.salePrice,
           costPrice,

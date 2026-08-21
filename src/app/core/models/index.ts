@@ -53,7 +53,11 @@ export interface Purchase {
   date: any;
   totalCost: number;
   lotIds: string[];
-  items: { productId: string; productName: string; quantity: number; unitCost: number }[];
+  items: { productId: string; productName: string; quantity: number; unitCost: number;category: string;
+  model: string;   // new
+  type: string;    // new
+  vehicleModel: string;
+  vehicle:string; }[];
 }
 
 export interface SaleItem {
@@ -62,6 +66,8 @@ export interface SaleItem {
   lotId: string;
   productId: string;
   productName: string;
+  vehicle?: string;
+  vehicleModel?:string;
   quantity: number;
   salePrice: number;
   costPrice: number;
@@ -102,4 +108,11 @@ export interface SupplierPayment {
   source: string;   // bank name / cash / etc.
   detail?: string;
   date?: any;        // Firestore Timestamp
+}
+export interface LotWithProduct extends Lot {
+  category?: string;
+  model?: string;
+  type?: string;
+  vehicle?: string;  
+  vehicleModel?: string;
 }

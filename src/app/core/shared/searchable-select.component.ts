@@ -14,7 +14,11 @@ import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/f
 export interface SelectableOption {
   id?: string;
   name: string;
-  vehicleModel?:string
+  vehicleModel?:string;
+  category?: string;
+  model?: string;   // new
+  type?: string;    // new
+  vehicle?:string;
 }
 
 @Component({
@@ -51,6 +55,8 @@ export interface SelectableOption {
               (click)="pick(o)"
             >
              {{ o.name }}{{ o.vehicleModel ? ' - ' + o.vehicleModel : '' }}
+             {{ o.vehicle ? ' - ' + o.vehicle : '' }}
+             {{ o.category ? ' - ' + o.category : '' }}
             </li>
           } @empty {
             <li class="px-3 py-2 text-gray-400">No matches</li>

@@ -8,7 +8,7 @@ import { ModelService } from '../../core/services/model.service';
 import { TypeService } from '../../core/services/type.service';
 import { LotService } from '../../core/services/lot.service';
 import { SaleService, SaleLineInput } from '../../core/services/sale.service';
-import { Product, Customer, Lot, Sale, Category, CarModel, ProductType } from '../../core/models';
+import { Product, Customer, Lot, Sale, Category, CarModel, ProductType, LotWithProduct } from '../../core/models';
 import { SHOP_INFO } from '../../core/shop-info';
 import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
 
@@ -192,6 +192,8 @@ interface CartLine extends SaleLineInput {
               <thead>
                 <tr class="border-b border-gray-200 text-gray-500 text-xs">
                   <th class="text-left py-1">Item</th>
+                  <th class="text-left py-1">Vehicle</th>
+                  <th class="text-left py-1">Vehicle Model</th>
                   <th class="text-right py-1">Qty</th>
                   <th class="text-right py-1">Price</th>
                   <th class="text-right py-1">Subtotal</th>
@@ -201,6 +203,8 @@ interface CartLine extends SaleLineInput {
                 @for (item of billItems(); track item.id) {
                   <tr class="border-b border-gray-100">
                     <td class="py-1">{{ item.productName }}</td>
+                    <td class="py-1">{{ item.vehicle }}</td>
+                    <td class="py-1">{{ item.vehicleModel }}</td>
                     <td class="py-1 text-right">{{ item.quantity }}</td>
                     <td class="py-1 text-right">Rs {{ item.salePrice | number }}</td>
                     <td class="py-1 text-right">
@@ -254,6 +258,7 @@ export class SalesComponent {
   sales = signal<Sale[]>([]);
   allLots = signal<Lot[]>([]);
   cart = signal<CartLine[]>([]);
+  
 
   billSale = signal<Sale | null>(null);
   billItems = signal<any[]>([]);
@@ -291,25 +296,42 @@ export class SalesComponent {
     );
   }
 
-  lotOptions = computed(() => {
-    const allowedIds = this.filteredProductIds();
-    return this.allLots()
-      .filter((lot) => allowedIds.has(lot.productId))
-      .map((lot) => {
-        const raw: any = (lot as any).purchaseDate;
-        const dateStr = raw?.toDate ? raw.toDate().toLocaleDateString() : (raw ?? '');
-        return {
-          id: lot.id!,
-          name: `${lot.productName} — ${dateStr} — Qty: ${lot.quantityRemaining}`,
-        };
-      });
+lotsWithProduct = computed<LotWithProduct[]>(() => {
+  const productMap = new Map(this.products().map((p) => [p.id!, p]));
+  return this.allLots().map((lot) => {
+    const product = productMap.get(lot.productId);
+    return {
+      ...lot,
+      category: product?.category,
+      model: product?.model,
+      type: product?.type,
+      vehicle: product?.vehicle ?? '',
+      vehicleModel:product?.vehicleModel ?? '',
+    };
   });
+});
 
-  selectedLot(): Lot | undefined {
-  return this.allLots().find((l) => l.id === this.selectedLotId);
+lotOptions = computed(() => {
+  const allowedIds = this.filteredProductIds();
+  return this.lotsWithProduct()
+    .filter((lot) => allowedIds.has(lot.productId))
+    .map((lot) => {
+      const raw: any = (lot as any).purchaseDate;
+      const dateStr = raw?.toDate ? raw.toDate().toLocaleDateString() : (raw ?? '');
+      return {
+        id: lot.id!,
+        name: `${lot.productName} — ${lot.category ?? ''} ${lot.model ?? ''} ${lot.type ?? ''} — ${dateStr} — Qty: ${lot.quantityRemaining}`,
+      };
+    });
+});
+
+selectedLot(): LotWithProduct | undefined {
+  return this.lotsWithProduct().find((l) => l.id === this.selectedLotId);
 }
 
-  addToCart(lot: Lot) {
+  addToCart(lot: LotWithProduct) {
+    console.log(lot);
+    
     if (!this.qty || this.qty <= 0 || this.qty > lot.quantityRemaining) {
       alert(`Enter a valid quantity (max ${lot.quantityRemaining})`);
       return;
@@ -324,6 +346,8 @@ export class SalesComponent {
         lotId: lot.id!,
         productId: lot.productId,
         productName: lot.productName,
+        vehicle:lot.vehicle,
+        vehicleModel:lot.vehicleModel,
         quantity: this.qty,
         salePrice: this.price,
         lotLabel: `Lot ${lot.id!.slice(0, 6)}`,
