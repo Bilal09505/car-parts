@@ -320,7 +320,7 @@ lotOptions = computed(() => {
       const dateStr = raw?.toDate ? raw.toDate().toLocaleDateString() : (raw ?? '');
       return {
         id: lot.id!,
-        name: `${lot.productName} — ${lot.category ?? ''} ${lot.model ?? ''} ${lot.type ?? ''} — ${dateStr} — Qty: ${lot.quantityRemaining}`,
+        name: `${lot.productName} - ${lot.vehicleModel ?? ''} — ${lot.category ?? ''}  ${lot.model ?? ''} ${lot.type ?? ''} — ${dateStr} — Qty: ${lot.quantityRemaining}`,
       };
     });
 });
@@ -330,8 +330,6 @@ selectedLot(): LotWithProduct | undefined {
 }
 
   addToCart(lot: LotWithProduct) {
-    console.log(lot);
-    
     if (!this.qty || this.qty <= 0 || this.qty > lot.quantityRemaining) {
       alert(`Enter a valid quantity (max ${lot.quantityRemaining})`);
       return;
