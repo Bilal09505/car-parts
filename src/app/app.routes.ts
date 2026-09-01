@@ -24,5 +24,10 @@ export const routes: Routes = [
       { path: 'reports', loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent) },
     ],
   },
+  {
+  path: 'portfolio',
+  loadComponent: () =>
+    import('./features/portfolio/portfolio.component').then((m) => m.PortfolioComponent),
+},
   { path: '**', redirectTo: 'dashboard' },
 ];
