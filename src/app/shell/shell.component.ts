@@ -81,6 +81,8 @@ export class ShellComponent {
     { label: 'Suppliers', icon: '▧', path: '/suppliers' },
     { label: 'Customers', icon: '▨', path: '/customers' },
     { label: 'Reports', icon: '▥', path: '/reports' },
+    { label: 'Gallery', icon: '▥', path: '/gallery' },
+
   ];
 
   mobileNavItems: NavItem[] = [

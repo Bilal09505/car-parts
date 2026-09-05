@@ -19,11 +19,13 @@ import {
 import { SHOP_INFO } from '../../core/shop-info';
 import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
 import { VehicleService } from '../../core/services/vehicle-type.service';
+import { SearchInputComponent } from '../../core/shared/search-input.component';
+import { PaginationComponent } from '../../core/shared/pagination';
 
 @Component({
   selector: 'app-purchase',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent,SearchInputComponent,PaginationComponent],
   template: `
     <h1 class="text-xl font-bold text-slate-800 mb-4">Purchase</h1>
 
@@ -107,6 +109,13 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
     </div>
 
     <h2 class="text-sm font-semibold text-gray-600 mb-2">Recent Purchases</h2>
+    <div class="mb-3">
+      <app-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearchChange($event)"
+        placeholder="Search by name"
+      />
+    </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
       <table class="w-full text-sm">
         <thead class="bg-slate-900 text-white">
@@ -118,7 +127,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
           </tr>
         </thead>
         <tbody>
-          @for (p of purchases(); track p.id) {
+          @for (p of paginatedPurchases(); track p.id) {
             <tr class="border-t border-gray-200">
               <td class="px-3 py-2">{{ p.supplierName }}</td>
               <td class="px-3 py-2">{{ p.items.length }} line(s)</td>
@@ -148,6 +157,12 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [totalItems]="filteredPurchase().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (currentPageChange)="currentPage.set($event)"
+    />
 
     @if (billPurchase()) {
       <div
@@ -251,6 +266,7 @@ export class PurchaseComponent {
   vihcles = signal<VehicleModel[]>([]);
   purchases = signal<Purchase[]>([]);
   supplierId = '';
+  searchTerm = signal('');
 
   billPurchase = signal<Purchase | null>(null);
 
@@ -281,6 +297,17 @@ export class PurchaseComponent {
     this.purchaseService.list().subscribe((l) => this.purchases.set(l));
     this.vichleService.list().subscribe((l) => this.vihcles.set(l));
   }
+
+  filteredPurchase = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.purchases();
+
+    return this.purchases().filter((p) =>
+      [p.supplierName].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
 
   filteredProducts(line: PurchaseLineInput) {
     return this.products().filter(
@@ -424,4 +451,17 @@ export class PurchaseComponent {
       this.isSubmitting = false;
     }
   }
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+  currentPage = signal(1);
+  pageSize = 10;
+  paginatedPurchases = computed(() => {
+    const purchses = this.filteredPurchase();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+
+    return purchses.slice(start, end);
+  });
 }

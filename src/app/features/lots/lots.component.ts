@@ -2,11 +2,13 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LotService } from '../../core/services/lot.service';
 import { Lot } from '../../core/models';
+import { PaginationComponent } from '../../core/shared/pagination';
+import { SearchInputComponent } from '../../core/shared/search-input.component';
 
 @Component({
   selector: 'app-lots',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,SearchInputComponent,PaginationComponent],
   template: `
     <h1 class="text-xl font-bold text-slate-800 mb-1">Lot Management</h1>
     <p class="text-xs text-gray-500 mb-4">Every purchase batch, tracked separately — this is also your lot-wise profit report.</p>
@@ -27,6 +29,13 @@ import { Lot } from '../../core/models';
     </div>
 
     @if (view() === 'lot') {
+      <div class="mb-3">
+      <app-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearchChange($event)"
+        placeholder="Search by name"
+      />
+    </div>
       <div class="overflow-x-auto border border-gray-200 rounded">
         <table class="w-full text-sm">
           <thead class="bg-slate-900 text-white">
@@ -41,7 +50,7 @@ import { Lot } from '../../core/models';
             </tr>
           </thead>
           <tbody>
-            @for (group of lotGroups(); track group.purchaseId) {
+            @for (group of paginatedLots(); track group.purchaseId) {
               <tr class="bg-slate-100">
                 <td colspan="7" class="px-3 py-1.5 text-xs font-semibold text-slate-600">
                   Purchase: {{ group.purchaseId.slice(0, 8) }} — {{ group.date | date:'medium' }}
@@ -62,7 +71,20 @@ import { Lot } from '../../core/models';
           </tbody>
         </table>
       </div>
+      <app-pagination
+      [totalItems]="filteredLots().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (currentPageChange)="currentPage.set($event)"
+    />
     } @else {
+      <div class="mb-3">
+      <app-search-input
+        [value]="searchProductTerm()"
+        (valueChange)="onSearchProductChange($event)"
+        placeholder="Search by name"
+      />
+    </div>
       <div class="overflow-x-auto border border-gray-200 rounded">
         <table class="w-full text-sm">
           <thead class="bg-slate-900 text-white">
@@ -77,7 +99,7 @@ import { Lot } from '../../core/models';
             </tr>
           </thead>
           <tbody>
-            @for (row of productSummary(); track row.productId) {
+            @for (row of paginatedProducts(); track row.productId) {
               <tr class="border-t border-gray-200" [class.bg-red-50]="row.quantityRemaining === 0">
                 <td class="px-3 py-2">{{ row.productName }}</td>
                 <td class="px-3 py-2 text-right">Rs {{ row.avgCost | number:'1.2-2' }}</td>
@@ -91,6 +113,12 @@ import { Lot } from '../../core/models';
           </tbody>
         </table>
       </div>
+      <app-pagination
+      [totalItems]="filteredProducts().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (currentPageChange)="currentPage.set($event)"
+    />
     }
   `,
 })
@@ -102,7 +130,7 @@ export class LotsComponent {
   lotGroups = computed(() => {
     const map = new Map<string, { purchaseId: string; date: Date; lots: Lot[] }>();
 
-    for (const lot of this.lots()) {
+    for (const lot of this.filteredLots()) {
       const purchaseId = (lot as any).purchaseId ?? 'unknown';
       const date = (lot as any).purchaseDate?.toDate?.() ?? new Date(0);
       const existing = map.get(purchaseId);
@@ -155,4 +183,50 @@ export class LotsComponent {
   constructor() {
     this.lotService.list().subscribe((l) => this.lots.set(l));
   }
+  searchTerm = signal('');
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+  searchProductTerm = signal('');
+  onSearchProductChange(term: string) {
+    this.searchProductTerm.set(term);
+    this.currentPage.set(1);
+  }
+  currentPage = signal(1);
+  pageSize = 10;
+  filteredLots = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.lots();
+
+    return this.lots().filter((lot) =>
+      [lot.productName].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
+  paginatedLots = computed(() => {
+    const lots = this.lotGroups();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+
+    return lots.slice(start, end);
+  });
+  filteredProducts = computed(() => {
+    const term = this.searchProductTerm().trim().toLowerCase();
+    if (!term) return this.productSummary();
+
+    return this.productSummary().filter((product) =>
+      [product.productName].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
+  paginatedProducts = computed(() => {
+    const lots = this.filteredProducts();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+
+    return lots.slice(start, end);
+  });
 }

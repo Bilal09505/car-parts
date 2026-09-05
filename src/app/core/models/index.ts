@@ -116,3 +116,10 @@ export interface LotWithProduct extends Lot {
   vehicle?: string;  
   vehicleModel?: string;
 }
+export interface GalleryImage {
+  id?: string;
+  imageUrl: string;
+  caption: string;
+  createdAt?: any; // Firestore Timestamp
+  order?: number;
+}

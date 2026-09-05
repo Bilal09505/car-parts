@@ -22,6 +22,7 @@ export const routes: Routes = [
       { path: 'suppliers/:id', loadComponent: () => import('./features/suppliers/supplier-detail.component').then(m => m.SupplierDetailComponent) },
       { path: 'customers', loadComponent: () => import('./features/customers/customers.component').then(m => m.CustomersComponent) },
       { path: 'reports', loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent) },
+      { path: 'gallery', loadComponent: () => import('./features/admin-gallery/admin-gallery.component').then(m=>m.AdminGalleryComponent)}
     ],
   },
   {

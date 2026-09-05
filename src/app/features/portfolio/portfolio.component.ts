@@ -9,7 +9,8 @@ import { TypeService } from '../../core/services/type.service';
 import { ModelService } from '../../core/services/model.service';
 import { VehicleService } from '../../core/services/vehicle-type.service';
 
-import { CarModel, Category, Product, ProductType, VehicleModel } from '../../core/models';
+import { CarModel, Category, GalleryImage, Product, ProductType, VehicleModel } from '../../core/models';
+import { GalleryService } from '../../core/services/gallery.service';
 
 interface PortfolioProduct {
   id: string;
@@ -218,6 +219,65 @@ interface CategoryShowcaseItem {
           </div>
         </div>
       </section>
+
+      <!-- ========================================================= -->
+<!-- GALLERY -->
+<!-- ========================================================= -->
+@if (galleryImages().length > 0) {
+  <section class="bg-white border-b border-black/5">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-14 sm:py-20">
+      <div class="mb-8">
+        <span class="text-[#a97907] text-xs font-black tracking-[0.18em]">OUR SHOP</span>
+        <h2 class="text-3xl sm:text-4xl font-black tracking-tight mt-2">Gallery</h2>
+        <p class="text-[#70757b] mt-2 max-w-xl">A look at our shop, stock and work.</p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        @for (img of galleryImages(); track img.id) {
+          <button
+            type="button"
+            (click)="openLightbox(img)"
+            class="group relative aspect-square bg-[#ecece8] rounded-2xl overflow-hidden border border-black/5 hover:border-[#f2b705]/60 transition-all"
+          >
+            <img
+              [src]="img.imageUrl"
+              [alt]="img.caption || 'Gallery image'"
+              loading="lazy"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            @if (img.caption) {
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <p class="text-white text-xs font-bold text-left line-clamp-1">{{ img.caption }}</p>
+              </div>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+}
+
+<!-- LIGHTBOX MODAL -->
+@if (lightboxImage(); as img) {
+  <div
+    class="fixed inset-0 bg-black/85 z-[60] flex items-center justify-center p-4"
+    (click)="closeLightbox()"
+  >
+    <button
+      type="button"
+      (click)="closeLightbox()"
+      class="absolute top-5 right-5 text-white text-3xl leading-none"
+    >
+      ✕
+    </button>
+    <div class="max-w-4xl w-full" (click)="$event.stopPropagation()">
+      <img [src]="img.imageUrl" [alt]="img.caption || 'Gallery image'" class="w-full max-h-[80vh] object-contain rounded-xl" />
+      @if (img.caption) {
+        <p class="text-white text-center mt-3 text-sm font-bold">{{ img.caption }}</p>
+      }
+    </div>
+  </div>
+}
 
       <!-- ========================================================= -->
       <!-- QUICK SEARCH -->
@@ -940,6 +1000,10 @@ export class PortfolioComponent {
   private readonly typeService = inject(TypeService);
   private readonly vehicleService = inject(VehicleService);
 
+  private readonly galleryService = inject(GalleryService);
+  readonly galleryImages = signal<GalleryImage[]>([]);
+  readonly lightboxImage = signal<GalleryImage | null>(null);
+
   // ============================================================
   // BASIC
   // ============================================================
@@ -1293,7 +1357,23 @@ export class PortfolioComponent {
         this.vehicles.set([]);
       },
     });
+
+    this.galleryService.list().subscribe({
+  next: (items) => this.galleryImages.set(items ?? []),
+  error: (error) => {
+    console.error('Failed to load gallery:', error);
+    this.galleryImages.set([]);
+  },
+});
   }
+
+  openLightbox(img: GalleryImage): void {
+  this.lightboxImage.set(img);
+}
+
+closeLightbox(): void {
+  this.lightboxImage.set(null);
+}
 
   // ============================================================
   // FILTER STATE
@@ -1429,4 +1509,5 @@ export class PortfolioComponent {
       a.localeCompare(b),
     );
   }
+  
 }

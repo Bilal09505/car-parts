@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -7,11 +7,13 @@ import { PurchaseService } from '../../core/services/purchase.service';
 import { SupplierPaymentService } from '../../core/services/supplier-payment.service';
 import { Supplier, Purchase, SupplierPayment } from '../../core/models';
 import { RouterLink } from "@angular/router";
+import { PaginationComponent } from '../../core/shared/pagination';
+import { SearchInputComponent } from '../../core/shared/search-input.component';
 
 @Component({
   selector: 'app-suppliers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink,SearchInputComponent,PaginationComponent],
   template: `
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-xl font-bold text-slate-800">Suppliers</h1>
@@ -32,6 +34,13 @@ import { RouterLink } from "@angular/router";
       </form>
     }
 
+    <div class="mb-3">
+      <app-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearchChange($event)"
+        placeholder="Search by name,address and phone..."
+      />
+    </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
       <table class="w-full text-sm">
         <thead class="bg-slate-900 text-white">
@@ -43,7 +52,7 @@ import { RouterLink } from "@angular/router";
           </tr>
         </thead>
         <tbody>
-          @for (s of suppliers(); track s.id) {
+          @for (s of paginatedSuppliers(); track s.id) {
             <tr class="border-t border-gray-200">
               <td class="px-3 py-2">{{ s.name }}</td>
               <td class="px-3 py-2">{{ s.phone }}</td>
@@ -65,6 +74,12 @@ import { RouterLink } from "@angular/router";
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [totalItems]="filteredSuppliers().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (currentPageChange)="currentPage.set($event)"
+    />
 
     @if (viewSupplier(); as vs) {
       <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" (click)="closeView()">
@@ -299,4 +314,28 @@ export class SuppliersComponent {
     this.editingId.set(null);
     this.showForm.set(false);
   }
+  searchTerm = signal('');
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+  currentPage = signal(1);
+  pageSize = 10;
+  filteredSuppliers = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.suppliers();
+
+    return this.suppliers().filter((p) =>
+      [p.name,p.address,p.phone].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
+  paginatedSuppliers = computed(() => {
+    const suppliers = this.filteredSuppliers();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+
+    return suppliers.slice(start, end);
+  });
 }

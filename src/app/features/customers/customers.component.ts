@@ -1,15 +1,17 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { CustomerService } from '../../core/services/customer.service';
 import { SaleService } from '../../core/services/sale.service';
 import { Customer, Sale } from '../../core/models';
+import { PaginationComponent } from '../../core/shared/pagination';
+import { SearchInputComponent } from '../../core/shared/search-input.component';
 
 @Component({
   selector: 'app-customers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,SearchInputComponent,PaginationComponent],
   template: `
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-xl font-bold text-slate-800">Customers</h1>
@@ -59,6 +61,13 @@ import { Customer, Sale } from '../../core/models';
       </form>
     }
 
+    <div class="mb-3">
+      <app-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearchChange($event)"
+        placeholder="Search by name, address and phone..."
+      />
+    </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
       <table class="w-full text-sm">
         <thead class="bg-slate-900 text-white">
@@ -70,7 +79,7 @@ import { Customer, Sale } from '../../core/models';
           </tr>
         </thead>
         <tbody>
-          @for (c of customers(); track c.id) {
+          @for (c of paginatedCustomers(); track c.id) {
             <tr class="border-t border-gray-200">
               <td class="px-3 py-2">{{ c.name }}</td>
               <td class="px-3 py-2">{{ c.phone }}</td>
@@ -100,6 +109,12 @@ import { Customer, Sale } from '../../core/models';
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [totalItems]="filteredSCustomers().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (currentPageChange)="currentPage.set($event)"
+    />
 
     @if (viewCustomer(); as vc) {
       <div
@@ -240,4 +255,28 @@ export class CustomersComponent {
     this.editingId.set(null);
     this.showForm.set(false);
   }
+  searchTerm = signal('');
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+  currentPage = signal(1);
+  pageSize = 10;
+  filteredSCustomers = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.customers();
+
+    return this.customers().filter((p) =>
+      [p.name,p.address,p.phone].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
+  paginatedCustomers = computed(() => {
+    const sales = this.filteredSCustomers();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+
+    return sales.slice(start, end);
+  });
 }

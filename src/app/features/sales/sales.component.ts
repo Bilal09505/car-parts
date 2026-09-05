@@ -11,6 +11,8 @@ import { SaleService, SaleLineInput } from '../../core/services/sale.service';
 import { Product, Customer, Lot, Sale, Category, CarModel, ProductType, LotWithProduct } from '../../core/models';
 import { SHOP_INFO } from '../../core/shop-info';
 import { SearchableSelectComponent } from '../../core/shared/searchable-select.component';
+import { PaginationComponent } from '../../core/shared/pagination';
+import { SearchInputComponent } from '../../core/shared/search-input.component';
 
 interface CartLine extends SaleLineInput {
   lotLabel: string;
@@ -20,7 +22,7 @@ interface CartLine extends SaleLineInput {
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent,SearchInputComponent,PaginationComponent],
   template: `
     <h1 class="text-xl font-bold text-slate-800 mb-4">Sales</h1>
 
@@ -119,6 +121,13 @@ interface CartLine extends SaleLineInput {
     </div>
 
     <h2 class="text-sm font-semibold text-gray-600 mb-2">Recent Sales</h2>
+    <div class="mb-3">
+      <app-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearchChange($event)"
+        placeholder="Search by name"
+      />
+    </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
       <table class="w-full text-sm">
         <thead class="bg-slate-900 text-white">
@@ -130,7 +139,7 @@ interface CartLine extends SaleLineInput {
           </tr>
         </thead>
         <tbody>
-          @for (s of sales(); track s.id) {
+          @for (s of paginatedSales(); track s.id) {
             <tr class="border-t border-gray-200">
               <td class="px-3 py-2">{{ s.customerName || 'Walk-in' }}</td>
               <td class="px-3 py-2 text-right">Rs {{ s.totalAmount | number }}</td>
@@ -150,6 +159,12 @@ interface CartLine extends SaleLineInput {
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [totalItems]="filteredSales().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (currentPageChange)="currentPage.set($event)"
+    />
 
     @if (billSale()) {
       <div
@@ -400,4 +415,28 @@ selectedLot(): LotWithProduct | undefined {
       this.isSubmitting = false;
     }
   }
+  searchTerm = signal('');
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+  currentPage = signal(1);
+  pageSize = 10;
+  filteredSales = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.sales();
+
+    return this.sales().filter((p) =>
+      [p.customerName].some((field) =>
+        (field ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
+  paginatedSales = computed(() => {
+    const sales = this.filteredSales();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+
+    return sales.slice(start, end);
+  });
 }
