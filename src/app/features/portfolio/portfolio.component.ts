@@ -56,7 +56,7 @@ interface CategoryShowcaseItem {
               Gujrat, Punjab
             </span>
 
-            <span class="hidden md:block"> Near Daewoo Bus Stand, Rakh Dena </span>
+            <span class="hidden md:block"> Opposite  Daewoo Bus Stand Gujrat </span>
           </div>
 
           <div class="flex items-center gap-5">
