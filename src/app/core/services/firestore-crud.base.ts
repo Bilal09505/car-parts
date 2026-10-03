@@ -1,42 +1,22 @@
 import { inject, Injectable } from '@angular/core';
-import {
-  Firestore, collection, collectionData, doc, docData,
-  addDoc, updateDoc, deleteDoc, query, orderBy, CollectionReference,
-} from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { OfflineDataService } from './offline-data.service';
 
-/**
- * Thin wrapper over a Firestore collection giving list/get/add/update/delete.
- * Extend this for each entity instead of rewriting the same six functions.
- */
 @Injectable()
 export abstract class FirestoreCrudBase<T extends { id?: string }> {
-  protected firestore = inject(Firestore);
+  protected data = inject(OfflineDataService);
   protected abstract collectionName: string;
   protected orderByField = 'name';
-
-  protected col(): CollectionReference {
-    return collection(this.firestore, this.collectionName);
-  }
-
   list(): Observable<T[]> {
-    const q = query(this.col(), orderBy(this.orderByField));
-    return collectionData(q, { idField: 'id' }) as Observable<T[]>;
+    return this.data.watch<T>(this.collectionName).pipe(map(rows => [...rows].sort((a, b) =>
+      String((a as any)[this.orderByField] ?? '').localeCompare(String((b as any)[this.orderByField] ?? '')))));
   }
-
-  get(id: string): Observable<T | undefined> {
-    return docData(doc(this.firestore, this.collectionName, id), { idField: 'id' }) as Observable<T>;
+  get(id: string): Observable<T | undefined> { return this.list().pipe(map(rows => rows.find(row => row.id === id))); }
+  async add(data: Omit<T, 'id'>): Promise<string> {
+    const id = this.data.newId();
+    await this.data.write(this.collectionName, id, data, true);
+    return id;
   }
-
-  add(data: Omit<T, 'id'>): Promise<string> {
-    return addDoc(this.col(), data as any).then((ref) => ref.id);
-  }
-
-  update(id: string, data: Partial<T>): Promise<void> {
-    return updateDoc(doc(this.firestore, this.collectionName, id), data as any);
-  }
-
-  remove(id: string): Promise<void> {
-    return deleteDoc(doc(this.firestore, this.collectionName, id));
-  }
+  update(id: string, data: Partial<T>): Promise<void> { return this.data.write(this.collectionName, id, data); }
+  remove(id: string): Promise<void> { return this.data.write(this.collectionName, id, null); }
 }

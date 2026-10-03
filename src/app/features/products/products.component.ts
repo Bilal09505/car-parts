@@ -40,7 +40,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
         (ngSubmit)="save()"
         class="bg-gray-50 border border-gray-200 rounded p-4 mb-4 grid grid-cols-1 md:grid-cols-3 gap-3"
       >
-        <input
+        <input aria-label="Part name (e.g. Front Bumper)"
           [(ngModel)]="form.name"
           name="name"
           placeholder="Part name (e.g. Front Bumper)"
@@ -136,7 +136,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
           </button>
         </div>
 
-        <input
+        <input aria-label="Vehicle (e.g. Toyota Corolla)"
           [(ngModel)]="form.vehicleModel"
           name="vehicleModel"
           placeholder="Vehicle (e.g. Toyota Corolla)"
@@ -154,7 +154,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
           <option value="set">Set</option>
         </select>
 
-        <input
+        <input aria-label="Reorder level"
           [(ngModel)]="form.reorderLevel"
           name="reorderLevel"
           type="number"
@@ -162,7 +162,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
           required
           class="border rounded px-3 py-2 text-sm"
         />
-        <input
+        <input aria-label="Default sale price"
           [(ngModel)]="form.currentSalePrice"
           name="currentSalePrice"
           type="number"
@@ -189,7 +189,7 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
     </div>
 
     <div class="overflow-x-auto border border-gray-200 rounded">
-      <table class="w-full text-sm">
+      <table class="responsive-table w-full text-sm">
         <thead class="bg-slate-900 text-white">
           <tr>
             <th class="px-3 py-2 text-left">Name</th>
@@ -206,15 +206,15 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
         <tbody>
           @for (p of paginatedProducts(); track p.id) {
             <tr class="border-t border-gray-200">
-              <td class="px-3 py-2">{{ p.name }}</td>
-              <td class="px-3 py-2">{{ p.vehicleModel }}</td>
-              <td class="px-3 py-2">{{ p.category }}</td>
-              <td class="px-3 py-2">{{ p.model }}</td>
-              <td class="px-3 py-2">{{ p.type }}</td>
-              <td class="px-3 py-2">{{ p.unit }}</td>
-              <td class="px-3 py-2 text-right">{{ p.reorderLevel }}</td>
-              <td class="px-3 py-2 text-right">Rs {{ p.currentSalePrice | number }}</td>
-              <td class="px-3 py-2 text-right space-x-2 whitespace-nowrap">
+              <td data-label="Name" class="px-3 py-2"><div class="cell-value">{{ p.name }} @if ($any(p)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+              <td data-label="Vehicle" class="px-3 py-2"><div class="cell-value">{{ p.vehicleModel }}</div></td>
+              <td data-label="Category" class="px-3 py-2"><div class="cell-value">{{ p.category }}</div></td>
+              <td data-label="Model" class="px-3 py-2"><div class="cell-value">{{ p.model }}</div></td>
+              <td data-label="Type" class="px-3 py-2"><div class="cell-value">{{ p.type }}</div></td>
+              <td data-label="Unit" class="px-3 py-2"><div class="cell-value">{{ p.unit }}</div></td>
+              <td data-label="Reorder Lvl" class="px-3 py-2 text-right"><div class="cell-value">{{ p.reorderLevel }}</div></td>
+              <td data-label="Sale Price" class="px-3 py-2 text-right"><div class="cell-value">Rs {{ p.currentSalePrice | number }}</div></td>
+              <td data-label="Action" data-actions="true" class="px-3 py-2 text-right space-x-2 whitespace-nowrap"><div class="cell-value">
                 <button
                   (click)="openEditForm(p)"
                   class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded"
@@ -227,13 +227,13 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
                 >
                   Delete
                 </button>
-              </td>
+              </div></td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="9" class="px-3 py-4 text-center text-gray-400 text-xs">
+              <td data-label="Name" colspan="9" class="px-3 py-4 text-center text-gray-400 text-xs"><div class="cell-value">
                 {{ searchTerm() ? 'No products match your search.' : 'No products yet.' }}
-              </td>
+              </div></td>
             </tr>
           }
         </tbody>

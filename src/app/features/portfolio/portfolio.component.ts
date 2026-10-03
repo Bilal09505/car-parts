@@ -11,6 +11,8 @@ import { VehicleService } from '../../core/services/vehicle-type.service';
 
 import { CarModel, Category, GalleryImage, Product, ProductType, VehicleModel } from '../../core/models';
 import { GalleryService } from '../../core/services/gallery.service';
+import { OfflineDataService } from '../../core/services/offline-data.service';
+import { PwaService } from '../../core/services/pwa.service';
 
 interface PortfolioProduct {
   id: string;
@@ -44,15 +46,19 @@ interface CategoryShowcaseItem {
     <!-- ========================================================= -->
     <!-- PAGE -->
     <!-- ========================================================= -->
-    <div class="min-h-screen bg-[#f7f7f5] text-[#17191c]">
+    <div class="min-h-screen bg-[#F8FAFC] text-[#0C1140]">
+      @if (!offline.online()) { <div class="notice notice-warning" role="status">You’re offline. Downloaded account data may be available; external images, maps and videos need a connection.</div> }
+      @for (notice of offline.notices() | keyvalue; track notice.key) { <div class="notice notice-warning" role="status">{{ notice.value }}</div> }
+      @if (pwa.installPrompt() && !pwa.installed()) { <div class="px-4 py-2"><button class="primary-button" (click)="pwa.install()">Install Mughal Auto</button></div> }
+      @if (pwa.updateReady()) { <div class="notice"><p>An app update is ready. Resolve pending changes in your workspace before refreshing.</p><button class="primary-button" [disabled]="offline.operations().length > 0 || offline.syncing()" (click)="pwa.applyUpdate()">Update & refresh</button></div> }
       <!-- ========================================================= -->
       <!-- TOP BAR -->
       <!-- ========================================================= -->
-      <div class="hidden sm:block bg-[#0d0f10] text-white">
+      <div class="hidden sm:block bg-[#1C1452] text-white">
         <div class="max-w-7xl mx-auto px-5 lg:px-8 h-10 flex items-center justify-between text-xs">
           <div class="flex items-center gap-6 text-white/65">
             <span class="flex items-center gap-2">
-              <span class="text-[#f2b705]">●</span>
+              <span class="text-[#F6B21B]">●</span>
               Gujrat, Punjab
             </span>
 
@@ -62,12 +68,12 @@ interface CategoryShowcaseItem {
           <div class="flex items-center gap-5">
             <a
               href="mailto:mughalautos278@gmail.com"
-              class="hover:text-[#f2b705] transition-colors"
+              class="hover:text-[#F6B21B] transition-colors"
             >
               mughalautos278&#64;gmail.com
             </a>
 
-            <a href="tel:03336724500" class="font-semibold text-[#f2b705]"> 0333 6724500 </a>
+            <a href="tel:03336724500" class="font-semibold text-[#F6B21B]"> 0333 6724500 </a>
           </div>
         </div>
       </div>
@@ -75,12 +81,12 @@ interface CategoryShowcaseItem {
       <!-- ========================================================= -->
       <!-- NAVBAR -->
       <!-- ========================================================= -->
-      <nav class="sticky top-0 z-50 bg-[#111315]/95 backdrop-blur-md border-b border-white/10">
+      <nav class="sticky top-0 z-50 bg-[#0C1140]/95 backdrop-blur-md border-b border-white/10">
         <div class="max-w-7xl mx-auto px-5 lg:px-8 h-[72px] flex items-center justify-between">
           <!-- BRAND -->
           <a href="#home" class="flex items-center gap-3 group">
             <div
-              class="w-10 h-10 bg-[#f2b705] rounded-xl flex items-center justify-center text-[#111315] font-black text-lg shadow-lg shadow-yellow-500/10"
+              class="w-10 h-10 bg-[#F6B21B] rounded-xl flex items-center justify-center text-[#0C1140] font-black text-lg shadow-lg shadow-yellow-500/10"
             >
               M
             </div>
@@ -90,7 +96,7 @@ interface CategoryShowcaseItem {
                 MUGHAL AUTO
               </div>
 
-              <div class="text-[#f2b705] text-[10px] tracking-[0.2em] font-bold mt-1">
+              <div class="text-[#F6B21B] text-[10px] tracking-[0.2em] font-bold mt-1">
                 BODY PARTS
               </div>
             </div>
@@ -118,7 +124,7 @@ interface CategoryShowcaseItem {
           <!-- CALL CTA -->
           <a
             href="tel:03336724500"
-            class="flex items-center gap-2 bg-[#f2b705] hover:bg-[#ffc72c] text-[#111315] px-4 sm:px-5 py-2.5 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5"
+            class="flex items-center gap-2 bg-[#F6B21B] hover:bg-[#F6B21B] text-[#0C1140] px-4 sm:px-5 py-2.5 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5"
           >
             <span>☎</span>
             <span class="hidden sm:inline">Call Now</span>
@@ -129,7 +135,7 @@ interface CategoryShowcaseItem {
       <!-- ========================================================= -->
       <!-- HERO -->
       <!-- ========================================================= -->
-      <section id="home" class="relative overflow-hidden bg-[#111315] text-white">
+      <section id="home" class="relative overflow-hidden bg-[#0C1140] text-white">
         <!-- Background -->
         <div class="absolute inset-0">
           <img
@@ -139,17 +145,17 @@ interface CategoryShowcaseItem {
           />
 
           <div
-            class="absolute inset-0 bg-gradient-to-r from-[#111315] via-[#111315]/95 to-[#111315]/60"
+            class="absolute inset-0 bg-gradient-to-r from-[#0C1140] via-[#0C1140]/95 to-[#0C1140]/60"
           ></div>
         </div>
 
         <!-- Decorative -->
         <div
-          class="absolute -right-40 -top-40 w-[500px] h-[500px] rounded-full border border-[#f2b705]/10"
+          class="absolute -right-40 -top-40 w-[500px] h-[500px] rounded-full border border-[#F6B21B]/10"
         ></div>
 
         <div
-          class="absolute -right-20 -top-20 w-[350px] h-[350px] rounded-full border border-[#f2b705]/10"
+          class="absolute -right-20 -top-20 w-[350px] h-[350px] rounded-full border border-[#F6B21B]/10"
         ></div>
 
         <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-20 sm:py-28 lg:py-36">
@@ -158,7 +164,7 @@ interface CategoryShowcaseItem {
             <div
               class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-7"
             >
-              <span class="w-2 h-2 rounded-full bg-[#f2b705]"></span>
+              <span class="w-2 h-2 rounded-full bg-[#F6B21B]"></span>
 
               <span class="text-xs sm:text-sm font-semibold text-white/75">
                 AUTO BODY PARTS • GUJRAT, PUNJAB
@@ -170,7 +176,7 @@ interface CategoryShowcaseItem {
               class="font-black tracking-[-0.04em] leading-[0.95] text-5xl sm:text-6xl lg:text-8xl"
             >
               The right part.
-              <span class="text-[#f2b705]"> The right fit. </span>
+              <span class="text-[#F6B21B]"> The right fit. </span>
             </h1>
 
             <p class="mt-7 max-w-2xl text-base sm:text-lg lg:text-xl text-white/65 leading-relaxed">
@@ -182,7 +188,7 @@ interface CategoryShowcaseItem {
             <div class="flex flex-col sm:flex-row gap-3 mt-9">
               <a
                 href="#products"
-                class="inline-flex items-center justify-center gap-2 bg-[#f2b705] hover:bg-[#ffc72c] text-[#111315] px-6 py-3.5 rounded-xl font-black transition-all hover:-translate-y-0.5"
+                class="inline-flex items-center justify-center gap-2 bg-[#F6B21B] hover:bg-[#F6B21B] text-[#0C1140] px-6 py-3.5 rounded-xl font-black transition-all hover:-translate-y-0.5"
               >
                 Browse Parts
                 <span>→</span>
@@ -192,7 +198,7 @@ interface CategoryShowcaseItem {
                 href="https://wa.me/923336724500?text=Hello%20Mughal%20Auto%20Body%20Parts%2C%20I%20need%20information%20about%20an%20auto%20part."
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center justify-center gap-2 border border-white/15 hover:border-[#f2b705] bg-white/5 hover:bg-white/10 text-white px-6 py-3.5 rounded-xl font-bold transition-all"
+                class="inline-flex items-center justify-center gap-2 border border-white/15 hover:border-[#F6B21B] bg-white/5 hover:bg-white/10 text-white px-6 py-3.5 rounded-xl font-bold transition-all"
               >
                 WhatsApp Us
                 <span>↗</span>
@@ -202,17 +208,17 @@ interface CategoryShowcaseItem {
             <!-- Trust -->
             <div class="mt-12 pt-7 border-t border-white/10 flex flex-wrap gap-x-8 gap-y-4">
               <div>
-                <div class="text-[#f2b705] font-black text-xl">Quality</div>
+                <div class="text-[#F6B21B] font-black text-xl">Quality</div>
                 <div class="text-white/45 text-xs mt-1">Parts you can trust</div>
               </div>
 
               <div>
-                <div class="text-[#f2b705] font-black text-xl">Wide Range</div>
+                <div class="text-[#F6B21B] font-black text-xl">Wide Range</div>
                 <div class="text-white/45 text-xs mt-1">Multiple makes & models</div>
               </div>
 
               <div>
-                <div class="text-[#f2b705] font-black text-xl">Local</div>
+                <div class="text-[#F6B21B] font-black text-xl">Local</div>
                 <div class="text-white/45 text-xs mt-1">Based in Gujrat</div>
               </div>
             </div>
@@ -237,7 +243,7 @@ interface CategoryShowcaseItem {
           <button
             type="button"
             (click)="openLightbox(img)"
-            class="group relative aspect-square bg-[#ecece8] rounded-2xl overflow-hidden border border-black/5 hover:border-[#f2b705]/60 transition-all"
+            class="group relative aspect-square bg-[#ecece8] rounded-2xl overflow-hidden border border-black/5 hover:border-[#F6B21B]/60 transition-all"
           >
             <img
               [src]="img.imageUrl"
@@ -263,13 +269,11 @@ interface CategoryShowcaseItem {
     class="fixed inset-0 bg-black/85 z-[60] flex items-center justify-center p-4"
     (click)="closeLightbox()"
   >
-    <button
+    <button aria-label="Close dialog"
       type="button"
       (click)="closeLightbox()"
       class="absolute top-5 right-5 text-white text-3xl leading-none"
-    >
-      ✕
-    </button>
+    >✕</button>
     <div class="max-w-4xl w-full" (click)="$event.stopPropagation()">
       <img [src]="img.imageUrl" [alt]="img.caption || 'Gallery image'" class="w-full max-h-[80vh] object-contain rounded-xl" />
       @if (img.caption) {
@@ -292,18 +296,18 @@ interface CategoryShowcaseItem {
               <div class="flex-1 relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#92979d]"> ⌕ </span>
 
-                <input
+                <input aria-label="Search for a part, e.g. bumper, mirror, headlight..."
                   type="text"
                   [(ngModel)]="searchTerm"
                   placeholder="Search for a part, e.g. bumper, mirror, headlight..."
-                  class="w-full h-12 bg-[#f5f5f3] border border-[#e5e5e1] rounded-xl pl-11 pr-4 text-sm outline-none focus:border-[#f2b705] focus:ring-2 focus:ring-[#f2b705]/10 transition-all"
+                  class="w-full h-12 bg-[#f5f5f3] border border-[#e3e7ee] rounded-xl pl-11 pr-4 text-sm outline-none focus:border-[#F6B21B] focus:ring-2 focus:ring-[#F6B21B]/10 transition-all"
                 />
               </div>
 
               <!-- Category -->
               <select
                 [(ngModel)]="selectedCategory"
-                class="lg:w-48 h-12 bg-[#f5f5f3] border border-[#e5e5e1] rounded-xl px-4 text-sm outline-none focus:border-[#f2b705]"
+                class="lg:w-48 h-12 bg-[#f5f5f3] border border-[#e3e7ee] rounded-xl px-4 text-sm outline-none focus:border-[#F6B21B]"
               >
                 <option value="">All Categories</option>
 
@@ -317,7 +321,7 @@ interface CategoryShowcaseItem {
               <!-- Vehicle -->
               <select
                 [(ngModel)]="selectedVehicle"
-                class="lg:w-48 h-12 bg-[#f5f5f3] border border-[#e5e5e1] rounded-xl px-4 text-sm outline-none focus:border-[#f2b705]"
+                class="lg:w-48 h-12 bg-[#f5f5f3] border border-[#e3e7ee] rounded-xl px-4 text-sm outline-none focus:border-[#F6B21B]"
               >
                 <option value="">All Vehicles</option>
 
@@ -333,7 +337,7 @@ interface CategoryShowcaseItem {
               <div class="mt-4 flex items-center justify-between">
                 <p class="text-xs text-[#70757b]">
                   Showing
-                  <strong class="text-[#17191c]">
+                  <strong class="text-[#0C1140]">
                     {{ filteredProducts().length }}
                   </strong>
                   matching parts
@@ -381,7 +385,7 @@ interface CategoryShowcaseItem {
             <button
               type="button"
               (click)="selectCategory(category.keyword)"
-              class="group text-left bg-white border border-black/5 rounded-2xl overflow-hidden hover:border-[#f2b705]/60 hover:shadow-lg hover:shadow-black/5 transition-all"
+              class="group text-left bg-white border border-black/5 rounded-2xl overflow-hidden hover:border-[#F6B21B]/60 hover:shadow-lg hover:shadow-black/5 transition-all"
             >
               <div class="aspect-square bg-[#ecece8] overflow-hidden">
                 <img
@@ -425,7 +429,7 @@ interface CategoryShowcaseItem {
           @if (!hasActiveFilter()) {
             <div
               class="rounded-3xl border border-dashed border-[#d8d8d3]
-               bg-[#fafaf8] px-6 py-20 text-center"
+               bg-[#F8FAFC] px-6 py-20 text-center"
             >
               <div
                 class="mx-auto w-16 h-16 rounded-2xl
@@ -481,7 +485,7 @@ interface CategoryShowcaseItem {
           @if (hasActiveFilter() && displayProducts().length > 0) {
             <div class="flex items-center justify-between mb-5">
               <p class="text-sm text-[#70757b]">
-                <strong class="text-[#17191c]">
+                <strong class="text-[#0C1140]">
                   {{ displayProducts().length }}
                 </strong>
 
@@ -497,11 +501,11 @@ interface CategoryShowcaseItem {
             >
               @for (product of displayProducts(); track product.id) {
                 <article
-                  class="group bg-[#f8f8f6]
+                  class="group bg-[#F8FAFC]
                    border border-black/5
                    rounded-2xl overflow-hidden
                    hover:bg-white
-                   hover:border-[#f2b705]/60
+                   hover:border-[#F6B21B]/60
                    hover:shadow-xl
                    hover:shadow-black/5
                    transition-all duration-300"
@@ -523,7 +527,7 @@ interface CategoryShowcaseItem {
                     @if (product.isFeatured) {
                       <span
                         class="absolute top-3 left-3
-                         bg-[#f2b705] text-[#111315]
+                         bg-[#F6B21B] text-[#0C1140]
                          px-2.5 py-1 rounded-lg
                          text-[10px] font-black"
                       >
@@ -621,10 +625,10 @@ interface CategoryShowcaseItem {
                        w-full
                        h-10
                        rounded-xl
-                       bg-[#17191c]
-                       hover:bg-[#f2b705]
+                       bg-[#0C1140]
+                       hover:bg-[#F6B21B]
                        text-white
-                       hover:text-[#111315]
+                       hover:text-[#0C1140]
                        flex
                        items-center
                        justify-center
@@ -650,7 +654,7 @@ interface CategoryShowcaseItem {
             <div
               class="rounded-3xl
                border border-dashed border-[#d8d8d3]
-               bg-[#fafaf8]
+               bg-[#F8FAFC]
                px-6 py-20
                text-center"
             >
@@ -686,7 +690,7 @@ interface CategoryShowcaseItem {
                   (click)="clearFilters()"
                   class="px-5 py-3
                    rounded-xl
-                   bg-[#17191c]
+                   bg-[#0C1140]
                    text-white
                    text-sm
                    font-bold
@@ -701,11 +705,11 @@ interface CategoryShowcaseItem {
                   rel="noopener"
                   class="px-5 py-3
                    rounded-xl
-                   bg-[#f2b705]
-                   text-[#111315]
+                   bg-[#F6B21B]
+                   text-[#0C1140]
                    text-sm
                    font-bold
-                   hover:bg-[#ffc72c]"
+                   hover:bg-[#F6B21B]"
                 >
                   Ask us on WhatsApp
                 </a>
@@ -735,10 +739,10 @@ interface CategoryShowcaseItem {
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           @for (item of whyUs; track item.number) {
             <div
-              class="bg-white border border-black/5 rounded-2xl p-6 hover:border-[#f2b705]/50 transition-colors"
+              class="bg-white border border-black/5 rounded-2xl p-6 hover:border-[#F6B21B]/50 transition-colors"
             >
               <div
-                class="w-11 h-11 rounded-xl bg-[#f2b705] flex items-center justify-center font-black text-[#111315]"
+                class="w-11 h-11 rounded-xl bg-[#F6B21B] flex items-center justify-center font-black text-[#0C1140]"
               >
                 {{ item.number }}
               </div>
@@ -758,11 +762,11 @@ interface CategoryShowcaseItem {
       <!-- ========================================================= -->
       <!-- YOUTUBE -->
       <!-- ========================================================= -->
-      <section class="bg-[#111315] text-white">
+      <section class="bg-[#0C1140] text-white">
         <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 sm:py-28">
           <div class="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8">
             <div>
-              <span class="text-[#f2b705] text-xs font-black tracking-[0.18em]">
+              <span class="text-[#F6B21B] text-xs font-black tracking-[0.18em]">
                 SHOP & UPDATES
               </span>
 
@@ -777,7 +781,7 @@ interface CategoryShowcaseItem {
               href="https://youtube.com/@mughalautos-01"
               target="_blank"
               rel="noopener"
-              class="text-[#f2b705] text-sm font-bold"
+              class="text-[#F6B21B] text-sm font-bold"
             >
               Visit YouTube →
             </a>
@@ -822,10 +826,10 @@ interface CategoryShowcaseItem {
               <div class="grid sm:grid-cols-2 gap-4 mt-8">
                 <a
                   href="tel:03336724500"
-                  class="group border border-black/5 rounded-2xl p-5 hover:border-[#f2b705] transition-colors"
+                  class="group border border-black/5 rounded-2xl p-5 hover:border-[#F6B21B] transition-colors"
                 >
                   <div
-                    class="w-10 h-10 rounded-xl bg-[#f2f2ef] flex items-center justify-center group-hover:bg-[#f2b705] transition-colors"
+                    class="w-10 h-10 rounded-xl bg-[#f2f2ef] flex items-center justify-center group-hover:bg-[#F6B21B] transition-colors"
                   >
                     ☎
                   </div>
@@ -839,10 +843,10 @@ interface CategoryShowcaseItem {
                   href="https://wa.me/923336724500"
                   target="_blank"
                   rel="noopener"
-                  class="group border border-black/5 rounded-2xl p-5 hover:border-[#f2b705] transition-colors"
+                  class="group border border-black/5 rounded-2xl p-5 hover:border-[#F6B21B] transition-colors"
                 >
                   <div
-                    class="w-10 h-10 rounded-xl bg-[#f2f2ef] flex items-center justify-center group-hover:bg-[#f2b705] transition-colors"
+                    class="w-10 h-10 rounded-xl bg-[#f2f2ef] flex items-center justify-center group-hover:bg-[#F6B21B] transition-colors"
                   >
                     💬
                   </div>
@@ -854,7 +858,7 @@ interface CategoryShowcaseItem {
 
                 <a
                   href="mailto:mughalautos278@gmail.com"
-                  class="group border border-black/5 rounded-2xl p-5 hover:border-[#f2b705] transition-colors sm:col-span-2"
+                  class="group border border-black/5 rounded-2xl p-5 hover:border-[#F6B21B] transition-colors sm:col-span-2"
                 >
                   <div class="text-xs text-[#92979d]">Email</div>
 
@@ -868,7 +872,7 @@ interface CategoryShowcaseItem {
                   href="https://www.facebook.com/share/1DFkzJLxEi/"
                   target="_blank"
                   rel="noopener"
-                  class="px-4 py-2.5 rounded-xl bg-[#f4f4f1] hover:bg-[#f2b705] text-sm font-bold transition-colors"
+                  class="px-4 py-2.5 rounded-xl bg-[#F8FAFC] hover:bg-[#F6B21B] text-sm font-bold transition-colors"
                 >
                   Facebook
                 </a>
@@ -877,7 +881,7 @@ interface CategoryShowcaseItem {
                   href="https://www.tiktok.com/@mughalautobodyparts"
                   target="_blank"
                   rel="noopener"
-                  class="px-4 py-2.5 rounded-xl bg-[#f4f4f1] hover:bg-[#f2b705] text-sm font-bold transition-colors"
+                  class="px-4 py-2.5 rounded-xl bg-[#F8FAFC] hover:bg-[#F6B21B] text-sm font-bold transition-colors"
                 >
                   TikTok
                 </a>
@@ -886,7 +890,7 @@ interface CategoryShowcaseItem {
                   href="https://youtube.com/@mughalautos-01"
                   target="_blank"
                   rel="noopener"
-                  class="px-4 py-2.5 rounded-xl bg-[#f4f4f1] hover:bg-[#f2b705] text-sm font-bold transition-colors"
+                  class="px-4 py-2.5 rounded-xl bg-[#F8FAFC] hover:bg-[#F6B21B] text-sm font-bold transition-colors"
                 >
                   YouTube
                 </a>
@@ -914,13 +918,13 @@ interface CategoryShowcaseItem {
       <!-- ========================================================= -->
       <!-- FOOTER -->
       <!-- ========================================================= -->
-      <footer class="bg-[#0d0f10] text-white">
+      <footer class="bg-[#1C1452] text-white">
         <div class="max-w-7xl mx-auto px-5 lg:px-8 py-10">
           <div class="flex flex-col md:flex-row justify-between gap-8">
             <div>
               <div class="flex items-center gap-3">
                 <div
-                  class="w-9 h-9 bg-[#f2b705] rounded-lg flex items-center justify-center text-[#111315] font-black"
+                  class="w-9 h-9 bg-[#F6B21B] rounded-lg flex items-center justify-center text-[#0C1140] font-black"
                 >
                   M
                 </div>
@@ -928,7 +932,7 @@ interface CategoryShowcaseItem {
                 <div>
                   <div class="font-black">MUGHAL AUTO</div>
 
-                  <div class="text-[#f2b705] text-[9px] tracking-[0.2em] font-bold">BODY PARTS</div>
+                  <div class="text-[#F6B21B] text-[9px] tracking-[0.2em] font-bold">BODY PARTS</div>
                 </div>
               </div>
 
@@ -968,12 +972,12 @@ interface CategoryShowcaseItem {
       <!-- MOBILE ACTION BAR -->
       <!-- ========================================================= -->
       <div
-        class="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-[#111315]/95 backdrop-blur-md border-t border-white/10 p-3"
+        class="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-[#0C1140]/95 backdrop-blur-md border-t border-white/10 p-3"
       >
         <div class="grid grid-cols-2 gap-2">
           <a
             href="tel:03336724500"
-            class="h-11 rounded-xl bg-[#f2b705] text-[#111315] flex items-center justify-center gap-2 font-black text-sm"
+            class="h-11 rounded-xl bg-[#F6B21B] text-[#0C1140] flex items-center justify-center gap-2 font-black text-sm"
           >
             ☎ Call
           </a>
@@ -982,7 +986,7 @@ interface CategoryShowcaseItem {
             href="https://wa.me/923336724500"
             target="_blank"
             rel="noopener"
-            class="h-11 rounded-xl bg-white text-[#111315] flex items-center justify-center gap-2 font-black text-sm"
+            class="h-11 rounded-xl bg-white text-[#0C1140] flex items-center justify-center gap-2 font-black text-sm"
           >
             💬 WhatsApp
           </a>
@@ -992,6 +996,8 @@ interface CategoryShowcaseItem {
   `,
 })
 export class PortfolioComponent {
+  offline = inject(OfflineDataService);
+  pwa = inject(PwaService);
   private readonly sanitizer = inject(DomSanitizer);
 
   private readonly productService = inject(ProductService);
@@ -1509,5 +1515,5 @@ closeLightbox(): void {
       a.localeCompare(b),
     );
   }
-  
+
 }

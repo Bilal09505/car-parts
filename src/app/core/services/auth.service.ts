@@ -7,11 +7,13 @@ import {
   User,
 } from '@angular/fire/auth';
 import { Router } from '@angular/router';
+import { OfflineDataService } from './offline-data.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = inject(Auth);
   private router = inject(Router);
+  private offline = inject(OfflineDataService);
 
   currentUser = signal<User | null>(null);
 
@@ -24,8 +26,9 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    await this.offline.clearForSignOut();
     await signOut(this.auth);
-    this.router.navigate(['/login']);
+    location.replace('/login');
   }
 
   isLoggedIn(): boolean {

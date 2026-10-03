@@ -24,10 +24,10 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
 
     @if (showForm()) {
       <form (ngSubmit)="save()" class="bg-gray-50 border border-gray-200 rounded p-4 mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input [(ngModel)]="form.name" name="name" placeholder="Supplier name" required class="border rounded px-3 py-2 text-sm" />
-        <input [(ngModel)]="form.phone" name="phone" placeholder="Phone" class="border rounded px-3 py-2 text-sm" />
-        <input [(ngModel)]="form.address" name="address" placeholder="Address" class="border rounded px-3 py-2 text-sm" />
-        <input [(ngModel)]="form.balance" name="balance" type="number" placeholder="Opening balance" [disabled]="!!editingId()" class="border rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400" />
+        <input aria-label="Supplier name" [(ngModel)]="form.name" name="name" placeholder="Supplier name" required class="border rounded px-3 py-2 text-sm" />
+        <input aria-label="Phone" [(ngModel)]="form.phone" name="phone" placeholder="Phone" class="border rounded px-3 py-2 text-sm" />
+        <input aria-label="Address" [(ngModel)]="form.address" name="address" placeholder="Address" class="border rounded px-3 py-2 text-sm" />
+        <input aria-label="Opening balance" [(ngModel)]="form.balance" name="balance" type="number" placeholder="Opening balance" [disabled]="!!editingId()" class="border rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400" />
         <button type="submit" class="bg-blue-600 text-white text-sm px-3 py-2 rounded md:col-span-3">
           {{ editingId() ? 'Update Supplier' : 'Save Supplier' }}
         </button>
@@ -42,7 +42,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
       />
     </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
-      <table class="w-full text-sm">
+      <table class="responsive-table w-full text-sm">
         <thead class="bg-slate-900 text-white">
           <tr>
             <th class="px-3 py-2 text-left">Name</th>
@@ -54,21 +54,21 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
         <tbody>
           @for (s of paginatedSuppliers(); track s.id) {
             <tr class="border-t border-gray-200">
-              <td class="px-3 py-2">{{ s.name }}</td>
-              <td class="px-3 py-2">{{ s.phone }}</td>
-              <td class="px-3 py-2">{{ s.address }}</td>              
-              <td class="px-3 py-2 text-right space-x-2 whitespace-nowrap">
+              <td data-label="Name" class="px-3 py-2"><div class="cell-value">{{ s.name }} @if ($any(s)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+              <td data-label="Phone" class="px-3 py-2"><div class="cell-value">{{ s.phone }}</div></td>
+              <td data-label="Address" class="px-3 py-2"><div class="cell-value">{{ s.address }}</div></td>
+              <td data-label="Action" data-actions="true" class="px-3 py-2 text-right space-x-2 whitespace-nowrap"><div class="cell-value">
                 <button (click)="openEditForm(s)" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded">
                   Edit
                 </button>
                 <button [routerLink]="['/suppliers', s.id]" class="bg-slate-700 text-white text-xs px-3 py-1.5 rounded">
                   View
                 </button>
-              </td>
+              </div></td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="px-3 py-4 text-center text-gray-400 text-xs">No suppliers yet.</td>
+              <td data-label="Name" colspan="5" class="px-3 py-4 text-center text-gray-400 text-xs"><div class="cell-value">No suppliers yet.</div></td>
             </tr>
           }
         </tbody>
@@ -86,7 +86,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
         <div class="bg-white rounded shadow-lg w-full max-w-2xl p-5" (click)="$event.stopPropagation()">
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-bold text-slate-800 text-sm">Supplier Details</h2>
-            <button (click)="closeView()" class="text-gray-500 text-lg leading-none">✕</button>
+            <button aria-label="Close dialog" (click)="closeView()" class="text-gray-500 text-lg leading-none">✕</button>
           </div>
 
           <div class="space-y-2 text-sm mb-4">
@@ -98,7 +98,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
 
           <h3 class="text-xs font-semibold text-gray-500 mb-2">Purchase History</h3>
           <div class="max-h-40 overflow-auto border border-gray-200 rounded mb-4">
-            <table class="w-full text-xs">
+            <table class="responsive-table w-full text-xs">
               <thead class="bg-gray-100 sticky top-0">
                 <tr>
                   <th class="px-2 py-1.5 text-left">Date</th>
@@ -109,19 +109,19 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
               <tbody>
                 @for (purchase of supplierPurchases(); track purchase.id) {
                   <tr class="border-t border-gray-100">
-                    <td class="px-2 py-1.5">
+                    <td data-label="Date" class="px-2 py-1.5"><div class="cell-value">
                       {{
                         purchase.date?.toDate
                           ? (purchase.date.toDate() | date: 'd MMM y, h:mm a')
                           : (purchase.date | date: 'd MMM y, h:mm a')
                       }}
-                    </td>
-                    <td class="px-2 py-1.5 text-right">{{ purchase.items?.length || 0 }}</td>
-                    <td class="px-2 py-1.5 text-right">Rs {{ purchase.totalCost | number }}</td>
+                     @if ($any(purchase)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                    <td data-label="Items" class="px-2 py-1.5 text-right"><div class="cell-value">{{ purchase.items?.length || 0 }}</div></td>
+                    <td data-label="Total" class="px-2 py-1.5 text-right"><div class="cell-value">Rs {{ purchase.totalCost | number }}</div></td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="3" class="px-2 py-3 text-center text-gray-400">No purchases yet.</td>
+                    <td data-label="Date" colspan="3" class="px-2 py-3 text-center text-gray-400"><div class="cell-value">No purchases yet.</div></td>
                   </tr>
                 }
               </tbody>
@@ -130,7 +130,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
 
           <h3 class="text-xs font-semibold text-gray-500 mb-2">Payment History</h3>
           <div class="max-h-40 overflow-auto border border-gray-200 rounded mb-4">
-            <table class="w-full text-xs">
+            <table class="responsive-table w-full text-xs">
               <thead class="bg-gray-100 sticky top-0">
                 <tr>
                   <th class="px-2 py-1.5 text-left">Date</th>
@@ -142,20 +142,20 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
               <tbody>
                 @for (p of supplierPayments(); track p.id) {
                   <tr class="border-t border-gray-100">
-                    <td class="px-2 py-1.5">
+                    <td data-label="Date" class="px-2 py-1.5"><div class="cell-value">
                       {{
                         p.date?.toDate
                           ? (p.date.toDate() | date: 'd MMM y, h:mm a')
                           : (p.date | date: 'd MMM y, h:mm a')
                       }}
-                    </td>
-                    <td class="px-2 py-1.5">{{ p.source }}</td>
-                    <td class="px-2 py-1.5">{{ p.detail || '—' }}</td>
-                    <td class="px-2 py-1.5 text-right">Rs {{ p.amount | number }}</td>
+                     @if ($any(p)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                    <td data-label="Source" class="px-2 py-1.5"><div class="cell-value">{{ p.source }}</div></td>
+                    <td data-label="Detail" class="px-2 py-1.5"><div class="cell-value">{{ p.detail || '—' }}</div></td>
+                    <td data-label="Amount" class="px-2 py-1.5 text-right"><div class="cell-value">Rs {{ p.amount | number }}</div></td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="4" class="px-2 py-3 text-center text-gray-400">No payments yet.</td>
+                    <td data-label="Date" colspan="4" class="px-2 py-3 text-center text-gray-400"><div class="cell-value">No payments yet.</div></td>
                   </tr>
                 }
               </tbody>
@@ -174,13 +174,13 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
         <div class="bg-white rounded shadow-lg w-full max-w-sm p-5" (click)="$event.stopPropagation()">
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-bold text-slate-800 text-sm">Pay {{ ps.name }}</h2>
-            <button (click)="closePayModal()" class="text-gray-500 text-lg leading-none">✕</button>
+            <button aria-label="Close dialog" (click)="closePayModal()" class="text-gray-500 text-lg leading-none">✕</button>
           </div>
 
           <form (ngSubmit)="savePayment()" class="space-y-3">
-            <input [(ngModel)]="paymentForm.amount" name="amount" type="number" placeholder="Amount" required class="border rounded px-3 py-2 text-sm w-full" />
-            <input [(ngModel)]="paymentForm.source" name="source" placeholder="Source / Bank name" required class="border rounded px-3 py-2 text-sm w-full" />
-            <input [(ngModel)]="paymentForm.detail" name="detail" placeholder="Detail (optional)" class="border rounded px-3 py-2 text-sm w-full" />
+            <input aria-label="Amount" [(ngModel)]="paymentForm.amount" name="amount" type="number" placeholder="Amount" required class="border rounded px-3 py-2 text-sm w-full" />
+            <input aria-label="Source / Bank name" [(ngModel)]="paymentForm.source" name="source" placeholder="Source / Bank name" required class="border rounded px-3 py-2 text-sm w-full" />
+            <input aria-label="Detail (optional)" [(ngModel)]="paymentForm.detail" name="detail" placeholder="Detail (optional)" class="border rounded px-3 py-2 text-sm w-full" />
             <button type="submit" class="bg-green-600 text-white text-sm px-3 py-2 rounded w-full">
               Save Payment
             </button>

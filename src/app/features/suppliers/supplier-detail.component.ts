@@ -37,7 +37,7 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
             </button>
           </div>
           <div class="overflow-auto border border-gray-200 rounded">
-            <table class="w-full text-xs">
+            <table class="responsive-table w-full text-xs">
               <thead class="bg-gray-100">
                 <tr>
                   <th class="px-2 py-1.5 text-left">Date</th>
@@ -48,18 +48,18 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
               <tbody>
                 @for (purchase of purchases(); track purchase.id) {
                   <tr class="border-t border-gray-100">
-                    <td class="px-2 py-1.5">
+                    <td data-label="Date" class="px-2 py-1.5"><div class="cell-value">
                       {{
                         purchase.date?.toDate
                           ? (purchase.date.toDate() | date: 'd MMM y, h:mm a')
                           : (purchase.date | date: 'd MMM y, h:mm a')
                       }}
-                    </td>
-                    <td class="px-2 py-1.5 text-right">{{ purchase.items?.length || 0 }}</td>
-                    <td class="px-2 py-1.5 text-right">Rs {{ purchase.totalCost | number }}</td>
+                     @if ($any(purchase)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                    <td data-label="Items" class="px-2 py-1.5 text-right"><div class="cell-value">{{ purchase.items?.length || 0 }}</div></td>
+                    <td data-label="Total" class="px-2 py-1.5 text-right"><div class="cell-value">Rs {{ purchase.totalCost | number }}</div></td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="3" class="px-2 py-3 text-center text-gray-400">No purchases yet.</td></tr>
+                  <tr><td data-label="Date" colspan="3" class="px-2 py-3 text-center text-gray-400"><div class="cell-value">No purchases yet.</div></td></tr>
                 }
               </tbody>
             </table>
@@ -83,9 +83,9 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
           @if (showPayForm()) {
             <div class="no-print bg-gray-50 border border-gray-200 rounded p-3 mb-3">
               <form (ngSubmit)="savePayment()" class="space-y-2">
-                <input [(ngModel)]="paymentForm.amount" name="amount" type="number" placeholder="Amount" required class="border rounded px-3 py-2 text-sm w-full" />
-                <input [(ngModel)]="paymentForm.source" name="source" placeholder="Source / Bank name" required class="border rounded px-3 py-2 text-sm w-full" />
-                <input [(ngModel)]="paymentForm.detail" name="detail" placeholder="Detail (optional)" class="border rounded px-3 py-2 text-sm w-full" />
+                <input aria-label="Amount" [(ngModel)]="paymentForm.amount" name="amount" type="number" placeholder="Amount" required class="border rounded px-3 py-2 text-sm w-full" />
+                <input aria-label="Source / Bank name" [(ngModel)]="paymentForm.source" name="source" placeholder="Source / Bank name" required class="border rounded px-3 py-2 text-sm w-full" />
+                <input aria-label="Detail (optional)" [(ngModel)]="paymentForm.detail" name="detail" placeholder="Detail (optional)" class="border rounded px-3 py-2 text-sm w-full" />
                 <div class="flex gap-2">
                   <button type="submit" class="bg-green-600 text-white text-sm px-3 py-2 rounded flex-1">
                     {{ editingPaymentId() ? 'Update Payment' : 'Save Payment' }}
@@ -99,7 +99,7 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
           }
 
           <div class="overflow-auto border border-gray-200 rounded">
-            <table class="w-full text-xs">
+            <table class="responsive-table w-full text-xs">
               <thead class="bg-gray-100">
                 <tr>
                   <th class="px-2 py-1.5 text-left">Date</th>
@@ -112,22 +112,22 @@ import { Supplier, Purchase, SupplierPayment } from '../../core/models';
               <tbody>
                 @for (p of payments(); track p.id) {
                   <tr class="border-t border-gray-100">
-                    <td class="px-2 py-1.5">
+                    <td data-label="Date" class="px-2 py-1.5"><div class="cell-value">
                       {{
                         p.date?.toDate
                           ? (p.date.toDate() | date: 'd MMM y, h:mm a')
                           : (p.date | date: 'd MMM y, h:mm a')
                       }}
-                    </td>
-                    <td class="px-2 py-1.5">{{ p.source }}</td>
-                    <td class="px-2 py-1.5">{{ p.detail || '—' }}</td>
-                    <td class="px-2 py-1.5 text-right">Rs {{ p.amount | number }}</td>
-                    <td class="no-print px-2 py-1.5 text-right">
+                     @if ($any(p)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                    <td data-label="Source" class="px-2 py-1.5"><div class="cell-value">{{ p.source }}</div></td>
+                    <td data-label="Detail" class="px-2 py-1.5"><div class="cell-value">{{ p.detail || '—' }}</div></td>
+                    <td data-label="Amount" class="px-2 py-1.5 text-right"><div class="cell-value">Rs {{ p.amount | number }}</div></td>
+                    <td data-label="Action" data-actions="true" class="no-print px-2 py-1.5 text-right"><div class="cell-value">
                       <button (click)="editPayment(p)" class="text-blue-600 text-xs underline">Edit</button>
-                    </td>
+                    </div></td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="5" class="px-2 py-3 text-center text-gray-400">No payments yet.</td></tr>
+                  <tr><td data-label="Date" colspan="5" class="px-2 py-3 text-center text-gray-400"><div class="cell-value">No payments yet.</div></td></tr>
                 }
               </tbody>
             </table>

@@ -25,7 +25,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
               [class.bg-orange-600]="view() === 'lot'" [class.text-white]="view() === 'lot'"
               [class.bg-gray-100]="view() !== 'lot'" [class.text-gray-600]="view() !== 'lot'">
         Lot-wise
-      </button>      
+      </button>
     </div>
 
     @if (view() === 'lot') {
@@ -37,7 +37,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
       />
     </div>
       <div class="overflow-x-auto border border-gray-200 rounded">
-        <table class="w-full text-sm">
+        <table class="responsive-table w-full text-sm">
           <thead class="bg-slate-900 text-white">
             <tr>
               <th class="px-3 py-2 text-left">Product</th>
@@ -52,19 +52,19 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
           <tbody>
             @for (group of paginatedLots(); track group.purchaseId) {
               <tr class="bg-slate-100">
-                <td colspan="7" class="px-3 py-1.5 text-xs font-semibold text-slate-600">
+                <td data-label="Product" colspan="7" class="px-3 py-1.5 text-xs font-semibold text-slate-600"><div class="cell-value">
                   Purchase: {{ group.purchaseId.slice(0, 8) }} — {{ group.date | date:'medium' }}
-                </td>
+                </div></td>
               </tr>
               @for (lot of group.lots; track lot.id) {
                 <tr class="border-t border-gray-200" [class.bg-red-50]="lot.quantityRemaining === 0">
-                  <td class="px-3 py-2">{{ lot.productName }}</td>
-                  <td class="px-3 py-2">{{ lot.id?.slice(0, 6) }}</td>
-                  <td class="px-3 py-2 text-right">Rs {{ lot.purchasePrice | number }}</td>
-                  <td class="px-3 py-2 text-right">{{ lot.quantityPurchased }}</td>
-                  <td class="px-3 py-2 text-right">{{ lot.quantitySold }}</td>
-                  <td class="px-3 py-2 text-right font-medium">{{ lot.quantityRemaining }}</td>
-                  <td class="px-3 py-2 text-right text-green-700 font-medium">Rs {{ lot.totalProfit | number }}</td>
+                  <td data-label="Product" class="px-3 py-2"><div class="cell-value">{{ lot.productName }} @if ($any(lot)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                  <td data-label="Lot" class="px-3 py-2"><div class="cell-value">{{ lot.id?.slice(0, 6) }}</div></td>
+                  <td data-label="Cost/Unit" class="px-3 py-2 text-right"><div class="cell-value">Rs {{ lot.purchasePrice | number }}</div></td>
+                  <td data-label="Purchased" class="px-3 py-2 text-right"><div class="cell-value">{{ lot.quantityPurchased }}</div></td>
+                  <td data-label="Sold" class="px-3 py-2 text-right"><div class="cell-value">{{ lot.quantitySold }}</div></td>
+                  <td data-label="Remaining" class="px-3 py-2 text-right font-medium"><div class="cell-value">{{ lot.quantityRemaining }}</div></td>
+                  <td data-label="Profit" class="px-3 py-2 text-right text-green-700 font-medium"><div class="cell-value">Rs {{ lot.totalProfit | number }}</div></td>
                 </tr>
               }
             }
@@ -86,7 +86,7 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
       />
     </div>
       <div class="overflow-x-auto border border-gray-200 rounded">
-        <table class="w-full text-sm">
+        <table class="responsive-table w-full text-sm">
           <thead class="bg-slate-900 text-white">
             <tr>
               <th class="px-3 py-2 text-left">Product</th>
@@ -101,13 +101,13 @@ import { SearchInputComponent } from '../../core/shared/search-input.component';
           <tbody>
             @for (row of paginatedProducts(); track row.productId) {
               <tr class="border-t border-gray-200" [class.bg-red-50]="row.quantityRemaining === 0">
-                <td class="px-3 py-2">{{ row.productName }}</td>
-                <td class="px-3 py-2 text-right">Rs {{ row.avgCost | number:'1.2-2' }}</td>
-                <td class="px-3 py-2 text-right">{{ row.quantityPurchased }}</td>
-                <td class="px-3 py-2 text-right">{{ row.quantitySold }}</td>
-                <td class="px-3 py-2 text-right font-medium">{{ row.quantityRemaining }}</td>
-                <td class="px-3 py-2 text-right text-green-700 font-medium">Rs {{ row.totalProfit | number }}</td>
-                <td class="px-3 py-2 text-right text-gray-500">{{ row.lotCount }}</td>
+                <td data-label="Product" class="px-3 py-2"><div class="cell-value">{{ row.productName }} @if ($any(row)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                <td data-label="Avg Cost/Unit" class="px-3 py-2 text-right"><div class="cell-value">Rs {{ row.avgCost | number:'1.2-2' }}</div></td>
+                <td data-label="Purchased" class="px-3 py-2 text-right"><div class="cell-value">{{ row.quantityPurchased }}</div></td>
+                <td data-label="Sold" class="px-3 py-2 text-right"><div class="cell-value">{{ row.quantitySold }}</div></td>
+                <td data-label="Remaining" class="px-3 py-2 text-right font-medium"><div class="cell-value">{{ row.quantityRemaining }}</div></td>
+                <td data-label="Profit" class="px-3 py-2 text-right text-green-700 font-medium"><div class="cell-value">Rs {{ row.totalProfit | number }}</div></td>
+                <td data-label="Lots" class="px-3 py-2 text-right text-gray-500"><div class="cell-value">{{ row.lotCount }}</div></td>
               </tr>
             }
           </tbody>

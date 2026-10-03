@@ -4,6 +4,17 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
 
+    // Private, immutable receipts make retries safe without changing target permissions.
+    match /offlineOperations/{uid}/receipts/{operationId} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['uid', 'operationId', 'createdAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.operationId == operationId
+        && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
+
     match /products/{id} {
       allow read, write: if signedIn();
     }

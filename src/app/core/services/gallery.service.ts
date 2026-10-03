@@ -1,44 +1,15 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  Firestore,
-  collection,
-  collectionData,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  query,
-  orderBy,
-} from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Timestamp } from 'firebase/firestore';
+import { map } from 'rxjs';
 import { GalleryImage } from '../models';
-
+import { OfflineDataService } from './offline-data.service';
 @Injectable({ providedIn: 'root' })
 export class GalleryService {
-  private firestore = inject(Firestore);
-  private collectionRef = collection(this.firestore, 'gallery');
-
-  list(): Observable<GalleryImage[]> {
-    const q = query(this.collectionRef, orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<GalleryImage[]>;
+  private data = inject(OfflineDataService);
+  list() { return this.data.watch<GalleryImage>('gallery').pipe(map(rows => [...rows].sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0)))); }
+  async add(data: { imageUrl: string; caption: string }) {
+    await this.data.write('gallery', this.data.newId(), { ...data, createdAt: Timestamp.now() }, true);
   }
-
-  async add(data: { imageUrl: string; caption: string }): Promise<void> {
-    await addDoc(this.collectionRef, {
-      imageUrl: data.imageUrl,
-      caption: data.caption ?? '',
-      createdAt: serverTimestamp(),
-    });
-  }
-
-  async update(id: string, data: Partial<GalleryImage>): Promise<void> {
-    const ref = doc(this.firestore, 'gallery', id);
-    await updateDoc(ref, { ...data });
-  }
-
-  async delete(id: string): Promise<void> {
-    const ref = doc(this.firestore, 'gallery', id);
-    await deleteDoc(ref);
-  }
+  update(id: string, data: Partial<GalleryImage>) { return this.data.write('gallery', id, data); }
+  delete(id: string) { return this.data.write('gallery', id, null); }
 }

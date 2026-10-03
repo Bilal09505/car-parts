@@ -13,14 +13,14 @@ import { GalleryImage } from '../../core/models';
       <h1 class="text-xl font-bold text-slate-800 mb-4">Manage Gallery</h1>
 
       <form (ngSubmit)="save()" class="bg-gray-50 border border-gray-200 rounded p-4 mb-6 grid grid-cols-1 gap-3">
-        <input
+        <input aria-label="Image URL"
           [(ngModel)]="form.imageUrl"
           name="imageUrl"
           placeholder="Image URL"
           required
           class="border rounded px-3 py-2 text-sm"
         />
-        <input
+        <input aria-label="Caption / title"
           [(ngModel)]="form.caption"
           name="caption"
           placeholder="Caption / title"

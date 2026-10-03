@@ -76,13 +76,13 @@ import { PaginationComponent } from '../../core/shared/pagination';
                 [ngModel]="line.productId"
                 (ngModelChange)="onProductPick(line, $event)"
               ></app-searchable-select>
-              <input
+              <input aria-label="Qty"
                 [(ngModel)]="line.quantity"
                 type="number"
                 placeholder="Qty"
                 class="border rounded px-2 py-2 text-sm"
               />
-              <input
+              <input aria-label="Unit cost"
                 [(ngModel)]="line.unitCost"
                 type="number"
                 placeholder="Unit cost"
@@ -117,7 +117,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
       />
     </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
-      <table class="w-full text-sm">
+      <table class="responsive-table w-full text-sm">
         <thead class="bg-slate-900 text-white">
           <tr>
             <th class="px-3 py-2 text-left">Supplier</th>
@@ -129,10 +129,10 @@ import { PaginationComponent } from '../../core/shared/pagination';
         <tbody>
           @for (p of paginatedPurchases(); track p.id) {
             <tr class="border-t border-gray-200">
-              <td class="px-3 py-2">{{ p.supplierName }}</td>
-              <td class="px-3 py-2">{{ p.items.length }} line(s)</td>
-              <td class="px-3 py-2 text-right">Rs {{ p.totalCost | number }}</td>
-              <td class="px-3 py-2 text-right space-x-1">
+              <td data-label="Supplier" class="px-3 py-2"><div class="cell-value">{{ p.supplierName }} @if ($any(p)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+              <td data-label="Items" class="px-3 py-2"><div class="cell-value">{{ p.items.length }} line(s)</div></td>
+              <td data-label="Total" class="px-3 py-2 text-right"><div class="cell-value">Rs {{ p.totalCost | number }}</div></td>
+              <td data-label="Bill" data-actions="true" class="px-3 py-2 text-right space-x-1"><div class="cell-value">
                 <button
                   (click)="openBill(p)"
                   class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded"
@@ -151,7 +151,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
                 >
                   Delete
                 </button>
-              </td>
+              </div></td>
             </tr>
           }
         </tbody>
@@ -175,7 +175,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
         >
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-bold text-slate-800 text-sm">Purchase Bill</h2>
-            <button (click)="closeBill()" class="text-gray-500 text-lg leading-none">✕</button>
+            <button aria-label="Close dialog" (click)="closeBill()" class="text-gray-500 text-lg leading-none">✕</button>
           </div>
 
           <div class="text-center border-b border-gray-200 pb-3 mb-3">
@@ -198,7 +198,7 @@ import { PaginationComponent } from '../../core/shared/pagination';
             }
           </div>
 
-          <table class="w-full text-sm mb-3">
+          <table class="responsive-table w-full text-sm mb-3">
             <thead>
               <tr class="border-b border-gray-200 text-gray-500 text-xs">
                 <th class="text-left py-1">Item</th>
@@ -212,18 +212,18 @@ import { PaginationComponent } from '../../core/shared/pagination';
             <tbody>
               @for (item of billPurchase()!.items; track $index) {
                 <tr class="border-b border-gray-100">
-                  <td class="py-1">{{ item.productName }}</td>
-                  <td class="py-1">{{ item.vehicle }}</td>
-                  <td class="py-1">{{ item.vehicleModel }}</td>
-                  <td class="py-1 text-right">{{ item.quantity }}</td>
-                  <td class="py-1 text-right">Rs {{ item.unitCost | number }}</td>
-                  <td class="py-1 text-right">Rs {{ item.quantity * item.unitCost | number }}</td>
+                  <td data-label="Item" class="py-1"><div class="cell-value">{{ item.productName }} @if ($any(item)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                  <td data-label="Vehicle" class="py-1"><div class="cell-value">{{ item.vehicle }}</div></td>
+                  <td data-label="Vehicle Model" class="py-1"><div class="cell-value">{{ item.vehicleModel }}</div></td>
+                  <td data-label="Qty" class="py-1 text-right"><div class="cell-value">{{ item.quantity }}</div></td>
+                  <td data-label="Cost" class="py-1 text-right"><div class="cell-value">Rs {{ item.unitCost | number }}</div></td>
+                  <td data-label="Subtotal" class="py-1 text-right"><div class="cell-value">Rs {{ item.quantity * item.unitCost | number }}</div></td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="4" class="py-2 text-center text-gray-400 text-xs">
+                  <td data-label="Item" colspan="4" class="py-2 text-center text-gray-400 text-xs"><div class="cell-value">
                     No items on this purchase.
-                  </td>
+                  </div></td>
                 </tr>
               }
             </tbody>
@@ -445,7 +445,6 @@ export class PurchaseComponent {
       this.resetForm();
     } catch (e: any) {
       alert(e.message ?? 'Failed to save purchase.');
-      this.resetForm();
       this.isSubmitting = false;
     } finally {
       this.isSubmitting = false;

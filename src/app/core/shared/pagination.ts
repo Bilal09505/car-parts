@@ -31,12 +31,13 @@ import { CommonModule } from '@angular/common';
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center gap-1">
+        <div class="flex flex-wrap items-center gap-1" aria-label="Pagination">
 
           <!-- Previous -->
           <button
             type="button"
             (click)="goTo(currentPage() - 1)"
+            aria-label="Previous page"
             [disabled]="currentPage() === 1"
             class="h-8 min-w-8 px-2 rounded-md border border-gray-200
                    bg-white text-gray-600 text-sm
@@ -63,6 +64,8 @@ import { CommonModule } from '@angular/common';
               <button
                 type="button"
                 (click)="goTo(p)"
+                [attr.aria-label]="'Page ' + p"
+                [attr.aria-current]="p === currentPage() ? 'page' : null"
                 [class.bg-slate-900]="p === currentPage()"
                 [class.text-white]="p === currentPage()"
                 [class.border-slate-900]="p === currentPage()"
@@ -82,6 +85,7 @@ import { CommonModule } from '@angular/common';
           <button
             type="button"
             (click)="goTo(currentPage() + 1)"
+            aria-label="Next page"
             [disabled]="currentPage() === totalPages()"
             class="h-8 min-w-8 px-2 rounded-md border border-gray-200
                    bg-white text-gray-600 text-sm

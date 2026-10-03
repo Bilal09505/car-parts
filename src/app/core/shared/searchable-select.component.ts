@@ -35,6 +35,13 @@ export interface SelectableOption {
   template: `
     <div class="relative w-full" #wrapper>
       <input
+        role="combobox"
+        [attr.aria-label]="placeholder"
+        [attr.aria-expanded]="dropdownOpen()"
+        [attr.aria-controls]="listId"
+        aria-autocomplete="list"
+        (keydown.escape)="dropdownOpen.set(false)"
+        (keydown.arrowdown)="focusFirst($event)"
         type="text"
         [class]="inputClass"
         [placeholder]="selectedLabel() ?? placeholder"
@@ -46,10 +53,18 @@ export interface SelectableOption {
 
       @if (dropdownOpen()) {
         <ul
+          [id]="listId" role="listbox"
           class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded border border-gray-200 bg-white shadow text-sm"
         >
           @for (o of filteredOptions(); track o.id) {
             <li
+              role="option" tabindex="0"
+              [attr.aria-selected]="o.id === value()"
+              (keydown.enter)="pick(o)"
+              (keydown.space)="$event.preventDefault(); pick(o)"
+              (keydown.arrowdown)="moveOption($event, 1)"
+              (keydown.arrowup)="moveOption($event, -1)"
+              (keydown.escape)="dropdownOpen.set(false)"
               class="px-3 py-2 cursor-pointer hover:bg-gray-100"
               [class.bg-gray-100]="o.id === value()"
               (click)="pick(o)"
@@ -67,6 +82,18 @@ export interface SelectableOption {
   `,
 })
 export class SearchableSelectComponent implements ControlValueAccessor {
+  listId = 'select-' + crypto.randomUUID();
+  focusFirst(event: Event) {
+    event.preventDefault();
+    this.open();
+    setTimeout(() => this.wrapper.nativeElement.querySelector<HTMLElement>('[role=option]')?.focus());
+  }
+  moveOption(event: Event, direction: number) {
+    event.preventDefault();
+    const options = Array.from(this.wrapper.nativeElement.querySelectorAll<HTMLElement>('[role=option]'));
+    const index = options.indexOf(event.target as HTMLElement);
+    options[(index + direction + options.length) % options.length]?.focus();
+  }
   // Internally backed by a signal so `computed()` below actually re-runs
   // when options change (a plain @Input field would not trigger recompute).
   private _options = signal<SelectableOption[]>([]);

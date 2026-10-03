@@ -1,118 +1,64 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  Firestore, collection, collectionData, doc, runTransaction, Timestamp,
-  query, orderBy, where,
-} from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
-import { Sale, SaleItem } from '../models';
+import { Timestamp } from 'firebase/firestore';
+import { map } from 'rxjs';
+import { Lot, Sale, SaleItem } from '../models';
+import { OfflineDataService } from './offline-data.service';
+import { LocalWrite, documentData } from './offline-store';
 
 export interface SaleLineInput {
   lotId: string;
   productId: string;
   productName: string;
-  vehicleModel?:string;
-  vehicle?:string;
+  vehicleModel?: string;
+  vehicle?: string;
   quantity: number;
-  salePrice: number; // per unit
+  salePrice: number;
 }
-
 @Injectable({ providedIn: 'root' })
 export class SaleService {
-  private firestore = inject(Firestore);
+  private data = inject(OfflineDataService);
+  list() { return this.data.watch<Sale>('sales').pipe(map(rows => [...rows].sort((a, b) => b.date.toMillis() - a.date.toMillis()))); }
+  itemsForSale(saleId: string) { return this.data.watch<SaleItem>('saleItems').pipe(map(rows => rows.filter(row => row.saleId === saleId))); }
+  listItemsForSale(saleId: string) { return this.itemsForSale(saleId); }
+  salesForCustomer(customerId: string) { return this.list().pipe(map(rows => rows.filter(row => row.customerId === customerId))); }
 
-  list(): Observable<Sale[]> {
-    const q = query(collection(this.firestore, 'sales'), orderBy('date', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<Sale[]>;
-  }
-
-  itemsForSale(saleId: string): Observable<SaleItem[]> {
-    const q = query(collection(this.firestore, 'saleItems'), where('saleId', '==', saleId));
-    return collectionData(q, { idField: 'id' }) as Observable<SaleItem[]>;
-  }
-
-  /**
-   * Records a sale across one or more manually-picked lots, atomically.
-   * Throws (nothing written) if any lot has insufficient quantityRemaining.
-   */
   async recordSale(customerId: string | null, customerName: string, lines: SaleLineInput[]) {
-    return runTransaction(this.firestore, async (tx) => {
-      const saleRef = doc(collection(this.firestore, 'sales'));
-      let totalAmount = 0;
-      let totalProfit = 0;
-
-      // 1. All reads before any writes — required by Firestore transactions
-      const lotSnaps = await Promise.all(
-        lines.map((line) => tx.get(doc(this.firestore, 'lots', line.lotId)))
-      );
-
-      // 2. Validate stock
-      lotSnaps.forEach((snap, i) => {
-        const line = lines[i];
-        if (!snap.exists()) throw new Error(`Lot ${line.lotId} not found`);
-        const remaining = snap.data()['quantityRemaining'] as number;
-        if (remaining < line.quantity) {
-          throw new Error(
-            `Insufficient stock in lot for ${line.productName}: have ${remaining}, need ${line.quantity}`
-          );
-        }
-      });
-
-      // 3. Write: decrement lot, write immutable saleItem row
-      lotSnaps.forEach((snap, i) => {
-        const line = lines[i];
-        const lotData = snap.data()!;
-        const costPrice = lotData['purchasePrice'] as number;
-        const profit = (line.salePrice - costPrice) * line.quantity;
-
-        tx.update(doc(this.firestore, 'lots', line.lotId), {
-          quantityRemaining: lotData['quantityRemaining'] - line.quantity,
-          quantitySold: (lotData['quantitySold'] ?? 0) + line.quantity,
-          totalProfit: (lotData['totalProfit'] ?? 0) + profit,
-        });
-
-        tx.set(doc(collection(this.firestore, 'saleItems')), {
-          saleId: saleRef.id,
-          lotId: line.lotId,
-          productId: line.productId,
-          productName: line.productName,
-          vehicle:line.vehicle,
-          vehicleModel:line.vehicleModel,
-          quantity: line.quantity,
-          salePrice: line.salePrice,
-          costPrice,
-          profit,
-          date: Timestamp.now(),
-        });
-
-        totalAmount += line.salePrice * line.quantity;
-        totalProfit += profit;
-      });
-
-      // 4. Sale header last
-      tx.set(saleRef, {
-        customerId,
-        customerName,
-        date: Timestamp.now(),
-        totalAmount,
-        totalProfit,
-        itemCount: lines.length,
-      });
-
-      return saleRef.id;
-    });
+    if (!lines.length) throw new Error('Add at least one item to the sale.');
+    const lots = await this.data.read<Lot>('lots');
+    const id = this.data.newId();
+    const date = Timestamp.now();
+    const writes: LocalWrite[] = [];
+    const stocks = new Map<string, LocalWrite>();
+    let totalAmount = 0;
+    let totalProfit = 0;
+    for (const line of lines) {
+      if (!Number.isFinite(line.quantity) || line.quantity <= 0 || !Number.isFinite(line.salePrice) || line.salePrice <= 0) {
+        throw new Error('Quantity and sale price must be positive numbers.');
+      }
+      const lot = lots.find(lot => lot.id === line.lotId);
+      if (!lot || lot.productId !== line.productId) throw new Error('Selected stock is unavailable on this device.');
+      const profit = (line.salePrice - lot.purchasePrice) * line.quantity;
+      const stock: LocalWrite = stocks.get(line.lotId) ?? {
+        collection: 'lots', id: line.lotId, expected: documentData(lot), data: documentData(lot),
+        stock: { quantity: 0, profit: 0, cost: lot.purchasePrice, productId: lot.productId },
+      };
+      stock.stock!.quantity += line.quantity;
+      stock.stock!.profit += profit;
+      if (stock.stock!.quantity > lot.quantityRemaining) throw new Error('Insufficient stock for ' + line.productName + ', including other lines in this sale.');
+      stock.data = { ...documentData(lot), quantityRemaining: lot.quantityRemaining - stock.stock!.quantity,
+        quantitySold: (lot.quantitySold ?? 0) + stock.stock!.quantity, totalProfit: (lot.totalProfit ?? 0) + stock.stock!.profit };
+      stocks.set(line.lotId, stock);
+      writes.push({ collection: 'saleItems', id: this.data.newId(), expected: null, data: {
+        saleId: id, lotId: line.lotId, productId: line.productId, productName: line.productName,
+        vehicle: line.vehicle ?? '', vehicleModel: line.vehicleModel ?? '', quantity: line.quantity,
+        salePrice: line.salePrice, costPrice: lot.purchasePrice, profit, date,
+      } });
+      totalAmount += line.quantity * line.salePrice;
+      totalProfit += profit;
+    }
+    writes.push(...stocks.values(), { collection: 'sales', id, expected: null,
+      data: { customerId, customerName, date, totalAmount, totalProfit, itemCount: lines.length } });
+    await this.data.enqueue('Sale · ' + (customerName || 'Walk-in') + ' · Rs ' + totalAmount, writes);
+    return id;
   }
-  listItemsForSale(saleId: string): Observable<any[]> {
-    const q = query(collection(this.firestore, 'saleItems'), where('saleId', '==', saleId));
-    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
-  }
-  
-  salesForCustomer(customerId: string): Observable<Sale[]> {
-    const q = query(
-      collection(this.firestore, 'sales'),
-      where('customerId', '==', customerId),
-      orderBy('date', 'desc'),
-    );
-    return collectionData(q, { idField: 'id' }) as Observable<Sale[]>;
-  }
-
 }

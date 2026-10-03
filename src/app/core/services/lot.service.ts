@@ -1,33 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  Firestore, collection, collectionData, query, where, orderBy,
-} from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { map } from 'rxjs';
 import { Lot } from '../models';
-
+import { OfflineDataService } from './offline-data.service';
 @Injectable({ providedIn: 'root' })
 export class LotService {
-  private firestore = inject(Firestore);
-
-  /** All lots, newest purchase first — used by the Lot Management / lot-wise profit screen. */
-  list(): Observable<Lot[]> {
-    const q = query(collection(this.firestore, 'lots'), orderBy('purchaseDate', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<Lot[]>;
+  private data = inject(OfflineDataService);
+  list() { return this.data.watch<Lot>('lots').pipe(map(rows => [...rows].sort((a, b) => b.purchaseDate.toMillis() - a.purchaseDate.toMillis()))); }
+  listAvailableForProduct(productId: string) {
+    return this.list().pipe(map(rows => rows.filter(row => row.productId === productId && row.quantityRemaining > 0)
+      .sort((a, b) => a.quantityRemaining - b.quantityRemaining || a.purchaseDate.toMillis() - b.purchaseDate.toMillis())));
   }
-
-  /** Lots with stock left for a given product — this feeds the manual lot picker on the Sales screen. */
-  listAvailableForProduct(productId: string): Observable<Lot[]> {
-    const q = query(
-      collection(this.firestore, 'lots'),
-      where('productId', '==', productId),
-      where('quantityRemaining', '>', 0),
-      orderBy('quantityRemaining'),
-      orderBy('purchaseDate')
-    );
-    return collectionData(q, { idField: 'id' }) as Observable<Lot[]>;
-  }
-  listAllAvailable(): Observable<Lot[]> {
-  const q = query(collection(this.firestore, 'lots'), where('quantityRemaining', '>', 0));
-  return collectionData(q, { idField: 'id' }) as Observable<Lot[]>;
-}
+  listAllAvailable() { return this.list().pipe(map(rows => rows.filter(row => row.quantityRemaining > 0))); }
 }

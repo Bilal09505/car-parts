@@ -71,13 +71,13 @@ interface CartLine extends SaleLineInput {
         <div class="flex flex-wrap items-center gap-2 border border-gray-200 rounded p-2 bg-white text-sm mb-4">
           <span class="text-gray-500">Remaining: {{ lot.quantityRemaining }}</span>
           <span class="text-gray-500">Cost: Rs {{ lot.purchasePrice | number }}</span>
-          <input
+          <input aria-label="Qty"
             type="number"
             placeholder="Qty"
             [(ngModel)]="qty"
             class="border rounded px-2 py-1 w-20"
           />
-          <input
+          <input aria-label="Sale price"
             type="number"
             placeholder="Sale price"
             [(ngModel)]="price"
@@ -102,7 +102,7 @@ interface CartLine extends SaleLineInput {
               <span>{{ line.productName }} — {{ line.lotLabel }} × {{ line.quantity }}</span>
               <span
                 >Rs {{ line.quantity * line.salePrice | number }}
-                <button (click)="removeFromCart($index)" class="text-red-600 ml-2">✕</button>
+                <button aria-label="Remove sale item" (click)="removeFromCart($index)" class="text-red-600 ml-2">✕</button>
               </span>
             </div>
           }
@@ -129,7 +129,7 @@ interface CartLine extends SaleLineInput {
       />
     </div>
     <div class="overflow-x-auto border border-gray-200 rounded">
-      <table class="w-full text-sm">
+      <table class="responsive-table w-full text-sm">
         <thead class="bg-slate-900 text-white">
           <tr>
             <th class="px-3 py-2 text-left">Customer</th>
@@ -141,19 +141,19 @@ interface CartLine extends SaleLineInput {
         <tbody>
           @for (s of paginatedSales(); track s.id) {
             <tr class="border-t border-gray-200">
-              <td class="px-3 py-2">{{ s.customerName || 'Walk-in' }}</td>
-              <td class="px-3 py-2 text-right">Rs {{ s.totalAmount | number }}</td>
-              <td class="px-3 py-2 text-right text-green-700 font-medium">
+              <td data-label="Customer" class="px-3 py-2"><div class="cell-value">{{ s.customerName || 'Walk-in' }} @if ($any(s)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+              <td data-label="Amount" class="px-3 py-2 text-right"><div class="cell-value">Rs {{ s.totalAmount | number }}</div></td>
+              <td data-label="Profit" class="px-3 py-2 text-right text-green-700 font-medium"><div class="cell-value">
                 Rs {{ s.totalProfit | number }}
-              </td>
-              <td class="px-3 py-2 text-right">
+              </div></td>
+              <td data-label="Bill" data-actions="true" class="px-3 py-2 text-right"><div class="cell-value">
                 <button
                   (click)="openBill(s)"
                   class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded"
                 >
                   View Bill
                 </button>
-              </td>
+              </div></td>
             </tr>
           }
         </tbody>
@@ -177,7 +177,7 @@ interface CartLine extends SaleLineInput {
         >
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-bold text-slate-800 text-sm">Sale Receipt</h2>
-            <button (click)="closeBill()" class="text-gray-500 text-lg leading-none">✕</button>
+            <button aria-label="Close dialog" (click)="closeBill()" class="text-gray-500 text-lg leading-none">✕</button>
           </div>
 
           <div class="text-center border-b border-gray-200 pb-3 mb-3">
@@ -203,7 +203,7 @@ interface CartLine extends SaleLineInput {
           @if (billItemsLoading()) {
             <div class="text-xs text-gray-400 text-center py-4">Loading items…</div>
           } @else {
-            <table class="w-full text-sm mb-3">
+            <table class="responsive-table w-full text-sm mb-3">
               <thead>
                 <tr class="border-b border-gray-200 text-gray-500 text-xs">
                   <th class="text-left py-1">Item</th>
@@ -217,20 +217,20 @@ interface CartLine extends SaleLineInput {
               <tbody>
                 @for (item of billItems(); track item.id) {
                   <tr class="border-b border-gray-100">
-                    <td class="py-1">{{ item.productName }}</td>
-                    <td class="py-1">{{ item.vehicle }}</td>
-                    <td class="py-1">{{ item.vehicleModel }}</td>
-                    <td class="py-1 text-right">{{ item.quantity }}</td>
-                    <td class="py-1 text-right">Rs {{ item.salePrice | number }}</td>
-                    <td class="py-1 text-right">
+                    <td data-label="Item" class="py-1"><div class="cell-value">{{ item.productName }} @if ($any(item)._sync) { <span class="pending-badge">Saved on device</span> }</div></td>
+                    <td data-label="Vehicle" class="py-1"><div class="cell-value">{{ item.vehicle }}</div></td>
+                    <td data-label="Vehicle Model" class="py-1"><div class="cell-value">{{ item.vehicleModel }}</div></td>
+                    <td data-label="Qty" class="py-1 text-right"><div class="cell-value">{{ item.quantity }}</div></td>
+                    <td data-label="Price" class="py-1 text-right"><div class="cell-value">Rs {{ item.salePrice | number }}</div></td>
+                    <td data-label="Subtotal" class="py-1 text-right"><div class="cell-value">
                       Rs {{ item.quantity * item.salePrice | number }}
-                    </td>
+                    </div></td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="4" class="py-2 text-center text-gray-400 text-xs">
+                    <td data-label="Item" colspan="4" class="py-2 text-center text-gray-400 text-xs"><div class="cell-value">
                       No item detail found for this sale.
-                    </td>
+                    </div></td>
                   </tr>
                 }
               </tbody>
@@ -273,7 +273,7 @@ export class SalesComponent {
   sales = signal<Sale[]>([]);
   allLots = signal<Lot[]>([]);
   cart = signal<CartLine[]>([]);
-  
+
 
   billSale = signal<Sale | null>(null);
   billItems = signal<any[]>([]);

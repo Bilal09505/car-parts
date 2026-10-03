@@ -21,6 +21,7 @@ import { FormsModule } from '@angular/forms';
         />
       </svg>
       <input
+        [attr.aria-label]="placeholder()"
         type="text"
         [ngModel]="value()"
         (ngModelChange)="onInput($event)"
@@ -29,6 +30,7 @@ import { FormsModule } from '@angular/forms';
       />
       @if (value()) {
         <button
+          aria-label="Clear search"
           type="button"
           (click)="onInput('')"
           class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"

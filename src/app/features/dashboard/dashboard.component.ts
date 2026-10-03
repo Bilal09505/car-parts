@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ReportService, DashboardStats } from '../../core/services/report.service';
 import { Product } from '../../core/models';
+import { MonthlyProfitLossComponent } from '../../core/shared/monthly-profit-loss.component';
 
 interface TrendPoint {
   label: string;
@@ -11,14 +12,18 @@ interface TrendPoint {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, MonthlyProfitLossComponent],
   template: `
     <h1 class="text-2xl font-bold text-slate-800 mb-1">Dashboard</h1>
     <p class="text-sm text-gray-500 mb-6">Live overview of stock, sales, and purchases</p>
 
+    <app-monthly-profit-loss />
+
+    @if (error()) { <div class="notice notice-warning" role="alert">{{ error() }} <button class="secondary-button" (click)="refresh()">Retry</button></div> }
+
     @if (loading()) {
       <p class="text-gray-500 text-sm">Loading…</p>
-    } @else {
+    } @else if (!error()) {
       @if (stats(); as s) {
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
@@ -91,13 +96,23 @@ interface TrendPoint {
     }
   `,
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent {
   private reportService = inject(ReportService);
 
   stats = signal<DashboardStats | null>(null);
   lowStock = signal<{ product: Product; totalRemaining: number }[]>([]);
   trend = signal<TrendPoint[]>([]);
   loading = signal(true);
+  error = signal('');
+  private requestId = 0;
+
+  constructor() {
+    effect(onCleanup => {
+      this.reportService.revision();
+      const timer = setTimeout(() => { void this.refresh(); }, 100);
+      onCleanup(() => clearTimeout(timer));
+    });
+  }
 
   maxTrendAmount = computed(() => Math.max(...this.trend().map((t) => t.amount), 1));
 
@@ -106,15 +121,24 @@ export class DashboardComponent implements OnInit {
     return max > 0 ? Math.max((amount / max) * 100, 2) : 2;
   }
 
-  async ngOnInit() {
+  async refresh() {
+    const requestId = ++this.requestId;
+    this.error.set('');
+    try {
     const [stats, lowStock, trend] = await Promise.all([
       this.reportService.dashboardStats(),
       this.reportService.lowStockReport(),
       this.reportService.salesTrend7Days(),
     ]);
+    if (requestId !== this.requestId) return;
     this.stats.set(stats);
     this.lowStock.set(lowStock);
     this.trend.set(trend);
     this.loading.set(false);
+    } catch (error: any) {
+      if (requestId !== this.requestId) return;
+      this.error.set(error.message ?? 'Dashboard data is unavailable. Reconnect to download it.');
+      this.loading.set(false);
+    }
   }
 }

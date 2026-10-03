@@ -113,7 +113,7 @@ export interface LotWithProduct extends Lot {
   category?: string;
   model?: string;
   type?: string;
-  vehicle?: string;  
+  vehicle?: string;
   vehicleModel?: string;
 }
 export interface GalleryImage {
